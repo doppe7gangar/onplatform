@@ -25,7 +25,7 @@ SOURCES = [os.path.join(KIT, "tokens", "ios-tokens.css"), os.path.join(KIT, "ios
 OUT = os.path.join(KIT, "tailwind")
 
 NOT_COLOUR = re.compile(r"^(text|track|weight|font|radius|gutter|hit-target|disabled-opacity|"
-                        r"stepper|switch|tab-pill|list-inset)\b")
+                        r"stepper|switch|tab-pill|list-inset|tint-text-mix|tint-badge-mix)\b")
 
 
 def variables():
