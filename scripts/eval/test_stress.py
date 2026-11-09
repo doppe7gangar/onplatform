@@ -23,9 +23,9 @@ FAILED = []
 SEEDS = """
         <p id="seed-box" style="height:24px;overflow:hidden;margin:8px 4px;font:var(--ios-text-body)">Fits at the default size</p>
         <p style="font-size:15px;margin:8px 4px">A note in fixed pixels</p>
-        <div style="position:relative;height:30px;margin:8px 4px">
-          <span style="position:absolute;left:0;font:var(--ios-text-body)">Left label</span>
-          <span style="position:absolute;left:150px;font:var(--ios-text-body)">Right label</span></div>
+        <div style="position:relative;height:64px;margin:8px 4px">
+          <span style="position:absolute;left:0;white-space:nowrap;font:var(--ios-text-body)">Left label</span>
+          <span style="position:absolute;left:120px;white-space:nowrap;font:var(--ios-text-body)">Right label</span></div>
         <span style="display:inline-block;width:150px;white-space:nowrap;overflow:hidden;margin:0 4px;font:var(--ios-text-body)">Water all now</span>
         <span data-sf-symbol="chevron.right" style="display:inline-block">›</span>
         <span data-sf-symbol="chevron.backward" style="display:inline-block">‹</span>

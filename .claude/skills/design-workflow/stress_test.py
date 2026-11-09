@@ -217,9 +217,13 @@ def run(root, only, scale_override):
         def render(cond):
             pg = b.new_page(viewport={"width": w, "height": h}, color_scheme="light")
             pg.goto(url, wait_until="load")
+            # Measured in the design's own fonts: with a fallback still
+            # standing in, every width is another font's.
+            pg.evaluate("document.fonts.ready.then(() => true)")
             pg.wait_for_timeout(200)
             if cond != "base":
                 pg.evaluate(SETUP_JS, [cond, scale or 1])
+                pg.evaluate("document.fonts.ready.then(() => true)")
                 pg.wait_for_timeout(120)
             return pg
 
