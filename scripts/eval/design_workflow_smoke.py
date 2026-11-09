@@ -619,6 +619,41 @@ def test_taps_and_figma(project):
     print("ok dead taps and missing screens fail; the Figma export holds every screen and state")
 
 
+def test_content_and_brand(tmp):
+    """An iPhone design of lists alone fails, and so does one whose brand
+    colour is in theme.css but nowhere on the screen. The scaffold, which
+    opens on a hero in the brand colour, passes both."""
+    project = os.path.join(tmp, "ios-brand")
+    run([sys.executable, SCAFFOLD, "--name", "Supper", "--brand", "#C1552E", "--kind", "ios",
+         "--model", "stack", "--screens", "Tonight", "--thing", "recipes", "-o", project])
+    # It fails until its controls are wired (test_taps_and_figma); here
+    # only the two verdicts matter.
+    out = run([sys.executable, CHECK, project], expect=1).stdout
+    for want in ("opens on content", "ok   index.html: the brand colour is"):
+        if want not in out:
+            raise RuntimeError(f"the scaffold should pass {want!r}:\n" + out)
+    page = os.path.join(project, "index.html")
+    original = open(page, encoding="utf-8").read()
+    try:
+        lists = re.sub(r'\s*<a class="ios-hero".*?</a>\s*<a class="ios-card".*?</a>', "", original,
+                       count=1, flags=re.S)
+        lists = re.sub(r'<svg class="ios-ring".*?</svg>', "", lists, flags=re.S)
+        open(page, "w", encoding="utf-8").write(lists)
+        out = run([sys.executable, CHECK, project, "--no-browser"], expect=1).stdout
+        if "every screen is lists" not in out:
+            raise RuntimeError("a design of lists alone was not called out:\n" + out)
+        # The accent pointed back at the system blue: theme.css still
+        # holds the brand, the screen shows none of it.
+        blue = original.replace("</style>", "  :root { --ios-accent: #0088FF; --accent-text-safe: #0066CC; }\n</style>", 1)
+        open(page, "w", encoding="utf-8").write(blue)
+        out = run([sys.executable, CHECK, project], expect=1).stdout
+        if "the brand colour #C1552E is" not in out or "not in the design" not in out:
+            raise RuntimeError("a design that never shows its brand colour was not called out:\n" + out)
+    finally:
+        open(page, "w", encoding="utf-8").write(original)
+    print("ok a design of lists alone, or one hiding its brand colour, fails")
+
+
 def test_render_review(project):
     p = subprocess.run([sys.executable, RENDER, project], capture_output=True, text=True)
     if p.returncode != 0:
@@ -656,6 +691,7 @@ def main():
         test_taps_and_figma(outputs["ios-tabs"])
         test_ipad_chrome(outputs["ipad-sidebar"])
         test_android_chrome(outputs["android-tabs"])
+        test_content_and_brand(tmp)
         if a.browser:
             test_render_review(outputs["dashboard"])
     print("design workflow smoke test passed")

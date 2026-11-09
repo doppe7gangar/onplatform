@@ -68,9 +68,9 @@ brand consistency is the deliberate goal; it is a bad default.
 
 ## Whole iPhone screens: start from Apple's
 
-`ios-screens.html` is four screens composed the way Apple composes them on
-the Examples page of its iOS and iPadOS 27 kit, from the kit's parts and
-nothing else: an inset list (thumbnail row, stepper, date and time
+`ios-screens.html` opens with four screens composed the way Apple composes
+them on the Examples page of its iOS and iPadOS 27 kit, from the kit's
+parts and nothing else: an inset list (thumbnail row, stepper, date and time
 capsules, pop-up value, switch, action row), a plain list with letter
 sections, an empty state with its symbol in a circle, and a tab bar app.
 Copy the closest one and change the content. `verify_ios_screens.py`
@@ -88,9 +88,45 @@ The parts they use: `ios-largetitle` (with `ios-largetitle__subtitle`),
 What Apple's screens don't have, and a page that has them reads as a web
 page dressed as an app: tinted circles behind list-row icons (Settings
 uses a 30pt rounded square; the circle belongs to the empty state), round
-custom buttons inside rows, shadows under cards, gradients, coloured
-section backgrounds, and icons typed as characters or emoji.
-`check_design.py` fails the last one.
+custom buttons inside rows, shadows under cards, gradients on cards and
+buttons, coloured section backgrounds, and icons typed as characters or
+emoji. `check_design.py` fails the last one.
+
+## Content first: what Apple's own apps open on
+
+Those four screens are the system's chrome and its lists, and an app
+built from them alone reads as Settings: grey page, white rows,
+chevrons. Health, Fitness, Weather, Home and Journal open on the content
+instead -- a big figure, a ring, a chart, a picture, a run of colourful
+tiles -- and keep the list for the long tail underneath. The last three
+screens in `ios-screens.html` are composed that way:
+
+- `#summary`: a hero card the screen opens on, a card with a figure and a
+  ring, a pair of tiles, over a tab bar.
+- `#detail`: the subject's picture running up under a white status bar,
+  glass controls on it, then a row of stats, a chart card and the history.
+- `#browse`: a sideways carousel of picture cards, then a grid of tiles.
+
+The parts, in `ios-components.css` under "Content first": `ios-hero`
+(with `ios-art`, `ios-art--scrim`, `ios-hero__eyebrow`, `__title`,
+`__body`, `__action`), `ios-headerhero` with `ios-statusbar--over`,
+`ios-card` (`__head`, `__meta`, `__split`), `ios-metric` (`--hero`,
+`--tinted`), `ios-ring`, `ios-bars`, `ios-progress`, `ios-badge`,
+`ios-stats`, `ios-tiles` + `ios-tile` (`--filled`), `ios-carousel`,
+`ios-sectionhead` and `ios-homeindicator`.
+
+Each takes its colour from `--tint`, and with none set, from the accent,
+so a brand theme colours all of them; set `--tint` or an `ios-tint-*`
+class on a card and the ring, bars and art inside follow. Text in a tint
+is mixed toward the label colour until it clears 4.5:1, and `ios-art`
+caps how light it draws a pale brand so white words on it stay legible.
+`ios-art` is artwork made from the tint and a large symbol, for when
+there is no photograph; with one, put `<img class="ios-art__img">` inside.
+Use the person's photos or ones whose licence allows it, never a
+hotlinked image. These parts are composed, not measured -- Apple's kit
+draws the controls, not the apps -- so they follow the kit's rhythm (26pt
+corners, the 16pt gutter, the type scale) rather than a figure read off a
+screen. `verify_ios_screens.py` holds them to it, and to their contrast.
 
 **Real SF Symbols, on a Mac.** Every icon in the markup names its symbol
 (`data-sf-symbol="leaf.fill"`) over a drawn stand-in. The stand-ins are

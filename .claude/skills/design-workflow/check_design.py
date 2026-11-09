@@ -475,6 +475,49 @@ def check_uses_kit(path, html):
     ok(f"{name}: uses {len(used)} of the kit's measured components")
 
 
+# The parts a content-first iPhone screen is made of (ios-components.css,
+# "Content first"), and the plain image or chart a design may draw itself.
+CONTENT_PARTS = ("ios-hero", "ios-headerhero", "ios-card", "ios-tile", "ios-ring",
+                 "ios-bars", "ios-art", "ios-carousel", "ios-stats", "ios-metric",
+                 "ios-progress")
+_CONTENT = re.compile(r'class="[^"]*\b(?:' + "|".join(CONTENT_PARTS) + r')\b'
+                      r'|<img\b[^>]*\bsrc="[^"]+"|<picture\b|<canvas\b|<video\b'
+                      r'|<svg\b[^>]*\brole="img"')
+
+
+def check_content_first(path, html):
+    """An iPhone app built from grouped lists alone reads as Settings.
+
+    It is the most common way a design here came out correct and still
+    bad: measured chrome, real data, every check green, and every screen
+    a grey page of white rows. Apple's own apps open on the content --
+    Health on its figures, Fitness on rings, Weather on the sky, Home on
+    a picture of the room -- and keep lists for the long tail. A design
+    with no content part anywhere fails; one whose first screen has none
+    is warned, since a mail or notes app can rightly open on a list.
+    """
+    name = os.path.basename(path)
+    if not re.search(r'class="[^"]*\bios-statusbar\b', html) or is_ipad(path, html):
+        return
+    body = body_of(html)
+    if not _CONTENT.search(body):
+        bad(f"{name}: every screen is lists -- no hero, card, figure, chart, tile or "
+            f"picture anywhere -- so it reads as a Settings pane, not an app. Open "
+            f"the main screen on what the person came for, the way Health, Fitness "
+            f"and Weather do: ios-components.css \"Content first\" has the parts and "
+            f"ios-screens.html (#summary, #detail, #browse) shows them composed.")
+        return
+    marks = [m.start() for m in re.finditer(r'data-screen-id="', body)]
+    first = body[marks[0]:marks[1]] if len(marks) > 1 else body
+    first = re.split(r'class="state state--loading"', first)[0]
+    if not _CONTENT.search(first):
+        warn(f"{name}: the first screen is lists alone. Unless the product really is "
+             f"a list (mail, notes), open it on a hero, a figure or a chart "
+             f"(ios-components.css \"Content first\") and keep the list below it.")
+        return
+    ok(f"{name}: opens on content, not on a list")
+
+
 def check_icons_named(path, html):
     """On Android, icons are Material Symbols, named in data-icon.
 
@@ -782,6 +825,46 @@ function surfaceOf(el) {
   return cur;
 }
 
+// Text set on a picture -- a photo, a gradient, art drawn behind it --
+// has no background colour to read: the DOM says the surface is the
+// page, and white words on a dark hero measured 1.1:1 against grey.
+// Those runs are handed back with their box instead, and measured
+// against the rendered pixels underneath with the text hidden.
+// The box round the words themselves, not the element: a tab's box
+// takes in its icon and the glass rim, and the rim's dark edge is not
+// what the label is read against.
+function textBox(e) {
+  let L = Infinity, T = Infinity, R = -Infinity, B = -Infinity;
+  for (const n of e.childNodes) {
+    if (n.nodeType !== 3 || !n.textContent.trim()) continue;
+    const rg = document.createRange(); rg.selectNodeContents(n);
+    const r = rg.getBoundingClientRect();
+    L = Math.min(L, r.left); T = Math.min(T, r.top); R = Math.max(R, r.right); B = Math.max(B, r.bottom);
+  }
+  return R > L ? [L, T, R - L, B - T] : null;
+}
+function pictureUnder(e) {
+  const tb = textBox(e);
+  if (!tb) return false;
+  const x = tb[0] + tb[2] / 2, y = tb[1] + tb[3] / 2;
+  if (x < 0 || y < 0 || x >= innerWidth || y >= innerHeight) return false;
+  for (const n of document.elementsFromPoint(x, y)) {
+    if (n === e || e.contains(n)) continue;
+    const cs = getComputedStyle(n);
+    if (/^(IMG|VIDEO|CANVAS|PICTURE)$/.test(n.tagName)) return true;
+    // A photo is a picture wherever it is. A gradient is one only when
+    // it is painted as a layer of its own behind the words (art, a
+    // hero); on the text's own container it is a surface -- the glass
+    // of a tab bar -- and is measured as one, as before.
+    const bi = cs.backgroundImage || 'none';
+    if (bi !== 'none' && (/url\(/.test(bi) || !n.contains(e))) return true;
+    const bg = parseColor(cs.backgroundColor);
+    if (bg && bg[3] >= 0.999) return false;
+  }
+  return false;
+}
+let onPicture = [], recordPictures = true;
+
 // Measured in every state, not only the one that happens to be showing.
 // A filled button lives in the empty and error panels, which are hidden
 // by default -- so a light brand shipped white-on-yellow at 1.25:1 and
@@ -796,6 +879,15 @@ const collect = () => [...document.querySelectorAll(
     const cs = getComputedStyle(e);
     const raw = parseColor(cs.color);
     if (!raw || raw[3] === 0) return null;
+    const px0 = parseFloat(cs.fontSize), bold0 = parseInt(cs.fontWeight, 10) >= 590;
+    if (pictureUnder(e)) {
+      if (recordPictures) {
+        onPicture.push({t: e.textContent.trim().slice(0, 30), fg: raw.slice(0, 3),
+          box: textBox(e).map(Math.round),
+          need: (px0 >= 24 || (px0 >= 18.66 && bold0)) ? 3.0 : 4.5, px: Math.round(px0)});
+      }
+      return null;
+    }
     const bg = surfaceOf(e);
     const fg = over(raw, bg);
     const px = parseFloat(cs.fontSize);
@@ -848,6 +940,8 @@ if (root) {
   for (const st of ['populated', 'loading', 'empty', 'error']) {
     root.dataset.state = st;
     root.getBoundingClientRect();   // force layout so offsetParent is right
+    // Pictures are measured from a screenshot of the state as loaded.
+    recordPictures = st === was;
     sweep();
   }
   root.dataset.state = was;
@@ -918,6 +1012,7 @@ const lowContrast = [...seen.values()];
     small: small.slice(0, 6),
     macText,
     lowContrast: lowContrast.slice(0, 8),
+    onPicture: onPicture.slice(0, 24),
     treatments: treatments.slice(0, 12),
     lowCount: lowContrast.length,
   };
@@ -940,6 +1035,124 @@ def chrome_path():
         if hits:
             return hits[-1]
     return None
+
+
+# Counts the pixels of a screenshot whose hue is the brand's, and those
+# that are the system blue. Run on a canvas in the page so no imaging
+# library is needed.
+HUE_JS = """async ([png, hue, blueHue]) => {
+  const img = new Image(); img.src = 'data:image/png;base64,' + png; await img.decode();
+  const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+  const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+  const d = x.getImageData(0, 0, c.width, c.height).data;
+  let brand = 0, blue = 0;
+  const near = (h, t) => Math.min(Math.abs(h - t), 360 - Math.abs(h - t)) <= 14;
+  for (let i = 0; i < d.length; i += 4) {
+    const r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255;
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, dl = mx - mn;
+    if (dl < 0.12 || l < 0.12 || l > 0.9) continue;
+    const s = dl / (1 - Math.abs(2 * l - 1));
+    if (s < 0.3) continue;
+    let h = mx === r ? ((g - b) / dl) % 6 : mx === g ? (b - r) / dl + 2 : (r - g) / dl + 4;
+    h = (h * 60 + 360) % 360;
+    if (near(h, hue)) brand++; else if (near(h, blueHue)) blue++;
+  }
+  return {brand: brand / (d.length / 4), blue: blue / (d.length / 4)};
+}"""
+
+
+def hue_of(hex_colour):
+    """Hue in degrees and saturation, 0-1, of a #RRGGBB colour."""
+    import colorsys
+    r, g, b = (int(hex_colour.lstrip("#")[i:i + 2], 16) / 255 for i in (0, 2, 4))
+    h, l, s = colorsys.rgb_to_hls(r, g, b)
+    return h * 360, s
+
+
+# The luminance under each box, lightest and darkest tenth, from a
+# screenshot taken with every glyph made transparent.
+UNDER_JS = """async ([png, boxes, scale]) => {
+  const img = new Image(); img.src = 'data:image/png;base64,' + png; await img.decode();
+  const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+  const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+  const lin = v => (v /= 255) <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  return boxes.map(([l, t, w, h]) => {
+    const X = Math.max(0, Math.round(l * scale)), Y = Math.max(0, Math.round(t * scale));
+    const W = Math.min(c.width - X, Math.round(w * scale)), H = Math.min(c.height - Y, Math.round(h * scale));
+    if (W < 1 || H < 1) return null;
+    const d = x.getImageData(X, Y, W, H).data, L = [];
+    for (let i = 0; i < d.length; i += 4)
+      L.push(0.2126 * lin(d[i]) + 0.7152 * lin(d[i + 1]) + 0.0722 * lin(d[i + 2]));
+    L.sort((a, b) => a - b);
+    return [L[Math.floor(L.length * 0.1)], L[Math.floor(L.length * 0.9)]];
+  });
+}"""
+
+
+def picture_contrast(b, pg, runs):
+    """Text on a picture, held to its ratio against the pixels under it.
+
+    For light text the lightest tenth of the box is what it has to beat;
+    for dark text, the darkest. A scrim that leaves one bright patch
+    under a word fails on that word, which is what a reader sees."""
+    import base64
+    pg.add_style_tag(content="* { color: transparent !important; "
+                             "text-shadow: none !important; caret-color: transparent !important; }")
+    pg.wait_for_timeout(60)
+    png = base64.b64encode(pg.screenshot()).decode()
+    under = pg.evaluate(UNDER_JS, [png, [r["box"] for r in runs], 1])
+    low = []
+    lin = lambda v: (v / 255) / 12.92 if v / 255 <= 0.03928 else (((v / 255) + 0.055) / 1.055) ** 2.4
+    for r, u in zip(runs, under):
+        if not u:
+            continue
+        fl = 0.2126 * lin(r["fg"][0]) + 0.7152 * lin(r["fg"][1]) + 0.0722 * lin(r["fg"][2])
+        worst = u[1] if fl > 0.18 else u[0]
+        ratio = (max(fl, worst) + 0.05) / (min(fl, worst) + 0.05)
+        if ratio + 0.01 < r["need"]:
+            low.append({"t": r["t"], "r": round(ratio, 2), "need": r["need"], "px": r["px"]})
+    return low
+
+
+def check_brand_presence(b, url, name, brand):
+    """The brand colour has to be on the screen, not only in theme.css.
+
+    Every check could pass with the accent bridged correctly and the
+    brand still nowhere to be seen: a design that coloured its symbols
+    with the system blue, kept the accent for a single "+" and built
+    the rest in grey shipped a green brand as a blue app. Measured on
+    the first screen as rendered, light, at phone width.
+    """
+    if not brand or not re.fullmatch(r"#[0-9A-Fa-f]{6}", brand):
+        return
+    hue, sat = hue_of(brand)
+    if sat < 0.25:
+        return  # a grey or near-black brand is carried by type, not colour
+    pg = b.new_page(viewport={"width": 390, "height": 844}, color_scheme="light")
+    try:
+        pg.goto(url + "?state=populated", wait_until="load")
+        pg.wait_for_timeout(250)
+        import base64
+        png = base64.b64encode(pg.screenshot()).decode()
+        blue_hue = hue_of("#0088FF")[0]
+        same = min(abs(hue - blue_hue), 360 - abs(hue - blue_hue)) <= 28
+        got = pg.evaluate(HUE_JS, [png, hue, -999 if same else blue_hue])
+    finally:
+        pg.close()
+    share, blue = got["brand"] * 100, got["blue"] * 100
+    also = (f" The system blue covers {blue:.1f}% -- symbols and highlights coloured "
+            f"--ios-blue rather than the accent." if blue > share else "")
+    if share < 0.2:
+        bad(f"{name}: the brand colour {brand} is {share:.2f}% of the first screen -- "
+            f"it is in theme.css but not in the design.{also} Put it where the eye "
+            f"lands: the hero, the selected tab, the main action, the figures "
+            f"(the content parts take --tint, which defaults to the accent).")
+    elif share < 1.0:
+        warn(f"{name}: the brand colour {brand} is only {share:.1f}% of the first "
+             f"screen.{also} A brand reads when it is on the hero, a chart or the "
+             f"selected tab, not just a button.")
+    else:
+        ok(f"{name}: the brand colour is {share:.0f}% of the first screen")
 
 
 def check_browser(path, brand):
@@ -1012,6 +1225,11 @@ def check_browser(path, brand):
             warn(f"could not launch a browser ({str(e)[:70]}); skipped "
                  f"the browser pass. Run `playwright install chromium`.")
             return
+        if not mac and not is_ipad(path, page):
+            try:
+                check_brand_presence(b, url, name, brand)
+            except Exception as e:  # a measurement, never a crash
+                warn(f"{name}: couldn't measure the brand colour ({str(e)[:60]})")
         for scheme in ("light", "dark"):
             for width in widths:
                 pg = b.new_page(viewport={"width": width, "height": 900},
@@ -1057,6 +1275,20 @@ def check_browser(path, brand):
                         hard = [c for c in d["lowContrast"] if c["t"] in still]
                         soft = [c for c in d["lowContrast"]
                                 if c["t"] not in still]
+                    if d.get("onPicture"):
+                        pic = picture_contrast(b, pg, d["onPicture"])
+                        pg.goto(url, wait_until="load")
+                        pg.wait_for_timeout(120)
+                        if pic:
+                            listed = ", ".join(f"\"{c['t']}\" {c['r']}:1 (needs {c['need']})"
+                                               for c in pic[:4])
+                            bad(f"{name} {scheme}: {len(pic)} text run(s) on a picture "
+                                f"under the contrast they need, measured against the "
+                                f"pixels behind them: {listed}. Deepen the scrim "
+                                f"(.ios-art--scrim) or move the words off the bright part.")
+                        else:
+                            ok(f"{name} {scheme}: {len(d['onPicture'])} text run(s) on a "
+                               f"picture clear their contrast against the pixels behind them")
                     if hard:
                         listed = ", ".join(
                             f"\"{c['t']}\" {c['r']}:1 (needs {c['need']}, "
@@ -1255,6 +1487,7 @@ def main():
         check_glyph_icons(p, html)
         check_token_overrides(p, html)
         check_uses_kit(p, html)
+        check_content_first(p, html)
         if is_android(p, html):
             check_icons_named(p, html)
         else:

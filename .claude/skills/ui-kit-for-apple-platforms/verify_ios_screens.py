@@ -19,6 +19,41 @@ BOX = """(sel) => { const e = document.querySelector(sel); if (!e) return null;
   const r = e.getBoundingClientRect(), s = e.closest('.screen').getBoundingClientRect();
   return [Math.round(r.left - s.left), Math.round(r.top - s.top), Math.round(r.width), Math.round(r.height)]; }"""
 ALL = """(sel) => [...document.querySelectorAll(sel)].map(e => Math.round(e.getBoundingClientRect().height))"""
+# Text colour against the surface under it, for every tinted label: the
+# colour a category gets must not cost its text the 4.5:1 it needs.
+TINTED = r"""(sel) => [...document.querySelectorAll(sel)].map(e => {
+  const bgs = [];
+  for (let n = e; n; n = n.parentElement) {
+    const b = getComputedStyle(n).backgroundColor;
+    if (b !== 'rgba(0, 0, 0, 0)') { bgs.push(b); if (!/\/ 0?\.|, 0?\.\d+\)$/.test(b)) break; }
+  }
+  return [e.textContent.trim().slice(0, 24), getComputedStyle(e).color, bgs]; })"""
+
+
+def to_rgba(css):
+    """rgb(), rgba() or color(srgb ...) as 0-255 floats and an alpha."""
+    import re
+    n = [float(x) for x in re.findall(r"[\d.]+", css)]
+    rgb = [v * 255 for v in n[:3]] if css.startswith("color(") else n[:3]
+    return rgb, (n[3] if len(n) > 3 else 1.0)
+
+
+def flatten(layers):
+    """Composite backgrounds listed innermost first onto the opaque one."""
+    out, _ = to_rgba(layers[-1])
+    for css in reversed(layers[:-1]):
+        rgb, a = to_rgba(css)
+        out = [c * a + o * (1 - a) for c, o in zip(rgb, out)]
+    return out
+
+
+def contrast(a, b):
+    def lum(c):
+        c = [v / 255 for v in c]
+        c = [v / 12.92 if v <= 0.04045 else ((v + 0.055) / 1.055) ** 2.4 for v in c]
+        return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
+    la, lb = sorted((lum(a), lum(b)), reverse=True)
+    return (la + 0.05) / (lb + 0.05)
 
 
 def main():
@@ -87,6 +122,33 @@ def main():
             # Tab bar: 62pt glass, 21pt off the bottom and the sides.
             tb = box("#tabs .ios-tabbar")
             c(tb[3] == 62 and tb[0] == 21 and tb[1] + tb[3] == 874 - 21, f"{t}: tab bar 62pt, 21pt in", tb)
+            hi = box("#tabs .ios-homeindicator")
+            c(hi[2] == 134 and hi[3] == 5 and hi[0] + 67 == 201 and hi[1] + 5 == 874 - 8,
+              f"{t}: home indicator 134 x 5, centred, 8pt off the bottom", hi)
+            # Content first: the hero and cards share the list's 26pt
+            # corners and sit on the 16pt gutter; tiles are two across.
+            hero = box("#summary .ios-hero")
+            c(hero[0] == 16 and hero[2] == 370 and hero[3] >= 240, f"{t}: hero 16pt in, full width, 240pt+", hero)
+            for sel in ("#summary .ios-hero", "#summary .ios-card"):
+                r = pg.evaluate(f"getComputedStyle(document.querySelector('{sel}')).borderRadius")
+                c(r == "26px", f"{t}: {sel.split()[-1]} corners 26pt", r)
+            tiles = pg.evaluate("[...document.querySelectorAll('#browse .ios-tile')].map(e => [Math.round(e.getBoundingClientRect().left), Math.round(e.getBoundingClientRect().width)])")
+            c(len({x for x, _ in tiles}) == 2 and all(w == 179 for _, w in tiles), f"{t}: tiles two across, 179pt each", tiles)
+            # A tint set on the card reaches the ring inside it.
+            ring = pg.evaluate("getComputedStyle(document.querySelector('#summary .ios-card .ios-ring__value')).stroke")
+            green = pg.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--ios-green').trim()")
+            c(ring.lower() == "rgb(%d, %d, %d)" % tuple(int(green[i:i + 2], 16) for i in (1, 3, 5)),
+              f"{t}: the card's tint reaches its ring", (ring, green))
+            # The detail's picture runs up under the status bar.
+            hh = box("#detail .ios-headerhero")
+            c(hh[1] == 0 and hh[3] >= 360, f"{t}: header picture from y 0, under the status bar", hh)
+            sbc = pg.evaluate("getComputedStyle(document.querySelector('#detail .ios-statusbar')).color")
+            c(sbc == "rgb(255, 255, 255)", f"{t}: status bar white over the picture", sbc)
+            for label, fg, layers in pg.evaluate(TINTED, ".ios-card__head, .ios-badge, .ios-metric--tinted .ios-metric__value"):
+                under = flatten(layers)
+                rgb, a = to_rgba(fg)
+                r = contrast([f * a + u * (1 - a) for f, u in zip(rgb, under)], under)
+                c(r >= 4.5, f"{t}: tinted text '{label}' {r:.2f}:1", f"{fg} on {layers}")
             pg.close()
         b.close()
     print(f"\n{sum(results)}/{len(results)} checks passed")

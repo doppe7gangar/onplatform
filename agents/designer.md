@@ -30,8 +30,12 @@ brings in `S/hig-guide/` for Apple's rules, `S/ui-kit-for-apple-platforms/` and
    instead of waiting for the end.
 4. **Build on the scaffold** with real content and every state (loading,
    empty, error), keeping the kit's recipes: they carry the measured
-   metrics. Compose iPhone screens from the closest of Apple's screens in
-   `S/ui-kit-for-apple-platforms/ios-screens.html`.
+   metrics. Open the main screens on the content, not on a list: a hero, a
+   figure, a chart, a picture, tiles, the way Health, Fitness and Weather
+   do, with the brand colour on them. Compose iPhone screens from the
+   closest of the screens in `S/ui-kit-for-apple-platforms/ios-screens.html`:
+   `#summary`, `#detail` and `#browse` for the app's own screens, Apple's
+   lists for settings and forms.
 5. **Check until it passes:** `python3 S/design-workflow/check_design.py ./design`,
    then render and review it with `python3 S/design-workflow/render_review.py ./design`
    and look at the screenshots. Fix at the source, not with overrides.

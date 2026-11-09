@@ -182,12 +182,17 @@ IOS_CSS = """
            flex-direction: column; background: var(--ios-bg);
            overflow-y: auto; }
   @media (max-width: 460px) {
-    /* On a real phone the device frame is a costume: the browser is
-       already the frame. Shed it rather than draw a phone in a phone. */
+    /* On a phone the bezel goes -- a phone drawn inside a phone is a
+       costume -- but the screen keeps its status bar, Dynamic Island
+       and home indicator. Without them the same design read as a web
+       page: those three are most of what says "iPhone app" at a glance,
+       in a preview pane, a screenshot or a phone's browser. */
     .stage { padding: 0; background: var(--ios-bg); place-items: stretch; }
-    .device { width: 100%; height: 100vh; border-radius: 0; box-shadow: none; }
-    .ios-statusbar { display: none; }
+    .device { width: 100%; height: 100vh; height: 100dvh; border-radius: 0; box-shadow: none; }
   }
+  /* Opened from the Home Screen it is the app itself, and the real
+     status bar is already there. */
+  @media (display-mode: standalone) { .ios-statusbar { display: none; } }
   .screen { flex: 1; padding: 16px var(--ios-gutter, 16px) 88px; }
   /* The kit's 11px row padding is measured for a text row: a 22px line
      box plus 11 above and below is exactly the 44pt target. A 29px icon
@@ -251,6 +256,12 @@ IOS_CSS = """
      screen's 16pt gutter: Apple's 20pt inset. */
   .ios-list { margin: 0 4px 22px; }
   .ios-tabbar__item[aria-selected="true"] { color: var(--accent-text-safe); }
+  /* A screen that opens on a picture (.ios-headerhero) runs it up under
+     the status bar, which turns white over it. */
+  .device:has(.tabscreen:not([hidden]) > .ios-headerhero) .ios-statusbar,
+  .device:has([data-screen-id]:not([hidden]) > .ios-headerhero) .ios-statusbar {
+      position: absolute; top: 0; left: 0; right: 0; z-index: 4; color: #fff; }
+  .ios-hero + .ios-card { margin-top: 12px; }
 """
 
 IOS_BODY = """<div class="demo">
@@ -309,12 +320,34 @@ __SWITCHER__
     <header class="ios-largetitle"><h1 class="largetitle">__SCREEN1__</h1></header>
     <main class="screen">
       <section class="state state--populated">
+        <!-- Content first: the screen opens on the one thing the person
+             came for, in colour, then a figure they check, then the
+             list. A screen of lists alone reads as Settings. Replace
+             the demo with the product's own hero and figure; the parts
+             are in ios-components.css under "Content first", and
+             ios-screens.html shows them composed. -->
+        <a class="ios-hero" href="#">
+          <div class="ios-art ios-art--scrim">__HEROGLYPH__</div>
+          <p class="ios-hero__eyebrow">Up next</p>
+          <h2 class="ios-hero__title">Sheet-pan chicken</h2>
+          <p class="ios-hero__body">35 minutes · ready by 7:15</p>
+          <span class="ios-btn ios-btn--filled ios-hero__action">Start Cooking</span>
+        </a>
+        <a class="ios-card" href="#">
+          <div class="ios-card__head">__CARDGLYPH__This Week<span class="ios-card__meta">Updated now</span></div>
+          <div class="ios-card__split">
+            <div class="ios-metric"><span class="ios-metric__value">5<span class="ios-metric__unit">of 7</span></span><span class="ios-metric__label">dinners cooked at home</span></div>
+            <svg class="ios-ring" viewBox="0 0 40 40" role="img" aria-label="5 of 7 dinners cooked at home"><circle class="ios-ring__track" cx="20" cy="20" r="16"/><circle class="ios-ring__value" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="71 100"/></svg>
+          </div>
+        </a>
         <p class="sectionhead">Today<a class="sectionhead__action" href="#">See All</a></p>
         <ul class="ios-list">
 __ROWS__
         </ul>
       </section>
       <section class="state state--loading">
+        <div class="skel" style="height:240px;border-radius:var(--ios-radius-card)"></div>
+        <div class="skel" style="height:118px;margin-top:12px;border-radius:var(--ios-radius-card)"></div>
         <p class="sectionhead">Today<a class="sectionhead__action" href="#">See All</a></p>
         <ul class="ios-list">
 __SKELROWS__
@@ -326,6 +359,7 @@ __ERROR__
     </div>
 __TABBAR__
    </div>
+   <span class="ios-homeindicator" aria-hidden="true"></span>
   </div>
  </div>
 </div>
@@ -1273,6 +1307,19 @@ def navlinks(screens):
     return "\n".join(out)
 
 
+FORK_GLYPH = ('<path d="M7 3v7a2 2 0 0 0 2 2v9M11 3v7a2 2 0 0 1-2 2M9 3v6"/>'
+              '<path d="M17 21V3c-2.2 1.3-3.5 4-3.5 7.5 0 2 1 3.5 3.5 3.5"/>')
+CALENDAR_GLYPH = '<rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 10h16M8 3v4M16 3v4"/>'
+
+
+def ios_svg(name, glyph, size, stroke, cls=""):
+    """A drawn stand-in for an SF Symbol; the name is the deliverable."""
+    c = f' class="{cls}"' if cls else ""
+    wh = f' width="{size}" height="{size}"' if size else ""
+    return (f'<svg{c} data-sf-symbol="{name}" viewBox="0 0 24 24"{wh} fill="none" stroke="currentColor" '
+            f'stroke-width="{stroke}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{glyph}</svg>')
+
+
 def rows(thing):
     demo = [("Overnight oats", "12 min"), ("Sheet-pan chicken", "35 min"),
             ("Miso soup", "8 min")]
@@ -1280,8 +1327,7 @@ def rows(thing):
     for title, value in demo:
         out.append(
             '          <li class="ios-list__row ios-list__row--tappable">\n'
-            f'            <span class="rowicon" data-sf-symbol="fork.knife"'
-            f' aria-hidden="true">{title[0]}</span>\n'
+            f'            <span class="rowicon" aria-hidden="true">{ios_svg("fork.knife", FORK_GLYPH, 22, 1.8)}</span>\n'
             f'            <span class="ios-list__title">{title}</span>\n'
             f'            <span class="ios-list__value">{value}</span>\n'
             '            <span class="ios-list__chevron" aria-hidden="true">&rsaquo;</span>\n'
@@ -1415,7 +1461,9 @@ def compose(kind, model, name, screens, thing):
     else:
         css = IOS_CSS
         body = (IOS_BODY.replace("__ROWS__", rows(thing))
-                .replace("__SKELROWS__", skel_rows()))
+                .replace("__SKELROWS__", skel_rows())
+                .replace("__HEROGLYPH__", ios_svg("fork.knife", FORK_GLYPH, 0, 1.3, "ios-art__glyph"))
+                .replace("__CARDGLYPH__", ios_svg("calendar", CALENDAR_GLYPH, 17, 2)))
         if model == "tabs":
             if len(screens) > 5:
                 raise ValueError("tabs chosen with more than five screens; reconsider hierarchy or use --model stack")

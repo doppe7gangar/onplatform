@@ -1474,3 +1474,435 @@ body {
 /* Apple's empty state fills the whole screen behind the bars, so the
    message centres on the screen, not on what the title leaves. */
 .ios-empty--fill { position: absolute; inset: 0; padding: 0 36px 36px; }
+
+/* ======================================================= Content first
+
+   Everything above is the system's chrome and its lists, and a screen
+   built from those alone reads as Settings: grey page, white rows,
+   chevrons. Apple's own apps rarely open that way. Health, Fitness,
+   Weather, Home and Journal lead with the content itself -- a big
+   number, a ring, a chart, a picture, a run of colourful tiles -- and
+   keep the list for the long tail underneath.
+
+   These are the parts those screens are made of. They are composed,
+   not measured: Apple's design kit draws the controls and not the apps,
+   so the sizes here follow the kit's own rhythm (26pt corners, a 16pt
+   gutter, the type scale) rather than a figure read off a screen.
+
+   Every part takes its colour from --tint, and with none set, from the
+   accent, so a brand theme colours all of them at once. Set --tint on a
+   card or tile (or use an .ios-tint-* class) and everything inside it
+   follows: give a category its own colour the way Health gives
+   Activity orange and Sleep teal. No part sets --tint itself, so the
+   colour inherits down to the ring, bars and art inside. */
+
+:root {
+  /* Rounded numerals for figures, as Apple's Health and Fitness set
+     them. ui-rounded is SF Pro Rounded on an Apple device; elsewhere it
+     falls back to the text face. */
+  --ios-font-rounded: ui-rounded, "SF Pro Rounded", var(--ios-font);
+  /* Text in a tint is mixed toward the label colour until it clears
+     4.5:1 on a card: yellow, the hardest, lands at 4.7:1 at 55% in
+     light. Dark cards leave far more room. */
+  --ios-tint-text-mix: 55%;
+  /* A badge's text sits on its own 15% wash, which costs it contrast:
+     yellow needs 45% to clear 4.5:1 there, on a card or on the page. */
+  --ios-tint-badge-mix: 45%;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --ios-tint-text-mix: 80%; --ios-tint-badge-mix: 80%; }
+}
+
+.ios-tint-accent { --tint: var(--ios-accent); }
+.ios-tint-red    { --tint: var(--ios-red); }
+.ios-tint-orange { --tint: var(--ios-orange); }
+.ios-tint-yellow { --tint: var(--ios-yellow); }
+.ios-tint-green  { --tint: var(--ios-green); }
+.ios-tint-mint   { --tint: var(--ios-mint); }
+.ios-tint-teal   { --tint: var(--ios-teal); }
+.ios-tint-cyan   { --tint: var(--ios-cyan); }
+.ios-tint-blue   { --tint: var(--ios-blue); }
+.ios-tint-indigo { --tint: var(--ios-indigo); }
+.ios-tint-purple { --tint: var(--ios-purple); }
+.ios-tint-pink   { --tint: var(--ios-pink); }
+.ios-tint-brown  { --tint: var(--ios-brown); }
+.ios-tint-gray   { --tint: var(--ios-gray); }
+
+/* -------------------------------------------------------------- Card
+
+   The summary card: a header in the card's colour (symbol, category,
+   and the time on the right), then the content -- a figure, a chart, a
+   line of text. The whole card is the tap target. */
+.ios-card {
+  display: block;
+  position: relative;
+  margin: 0;
+  padding: 14px var(--ios-gutter) 16px;
+  border-radius: var(--ios-radius-card);
+  background: var(--ios-bg-card);
+  color: var(--ios-label);
+  text-decoration: none;
+  overflow: hidden;
+}
+.ios-card + .ios-card { margin-top: 12px; }
+.ios-card__head {
+  display: flex; align-items: center; gap: 6px;
+  min-height: 22px; margin-bottom: 10px;
+  color: color-mix(in srgb, var(--tint, var(--ios-accent)) var(--ios-tint-text-mix), var(--ios-label));
+  font: var(--ios-text-subhead); font-weight: var(--ios-weight-semibold);
+  letter-spacing: var(--ios-track-subhead);
+}
+.ios-card__head svg { flex: none; color: var(--tint, var(--ios-accent)); }
+.ios-card__meta {
+  margin-left: auto;
+  color: var(--ios-label-secondary);
+  font: var(--ios-text-footnote); letter-spacing: var(--ios-track-footnote);
+}
+.ios-card__head .ios-list__chevron { margin-left: 4px; }
+.ios-card__title {
+  margin: 0;
+  font: var(--ios-text-headline); letter-spacing: var(--ios-track-headline);
+}
+.ios-card__body {
+  margin: 2px 0 0;
+  color: var(--ios-label-secondary);
+  font: var(--ios-text-subhead); letter-spacing: var(--ios-track-subhead);
+}
+/* A card with a figure on the left and a chart or ring on the right. */
+.ios-card__split { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+
+/* ------------------------------------------------------------ Figure
+
+   A number set the way Health and Fitness set them: rounded, bold,
+   tabular, with the unit smaller and secondary beside it. */
+.ios-metric { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ios-metric__label {
+  color: var(--ios-label-secondary);
+  font: var(--ios-text-footnote); font-weight: var(--ios-weight-semibold);
+  letter-spacing: var(--ios-track-footnote);
+}
+.ios-metric__value {
+  font: 700 28px/34px var(--ios-font-rounded);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.38px;
+  color: var(--ios-label);
+}
+.ios-metric__unit {
+  margin-left: 3px;
+  color: var(--ios-label-secondary);
+  font: var(--ios-text-subhead); font-weight: var(--ios-weight-semibold);
+  letter-spacing: var(--ios-track-subhead);
+}
+.ios-metric--tinted .ios-metric__value { color: color-mix(in srgb, var(--tint, var(--ios-accent)) var(--ios-tint-text-mix), var(--ios-label)); }
+/* The one figure a screen is about, on its hero. */
+.ios-metric--hero .ios-metric__value { font: 700 56px/60px var(--ios-font-rounded); letter-spacing: -0.5px; }
+.ios-metric--hero .ios-metric__unit { font: var(--ios-text-title3); font-weight: var(--ios-weight-semibold); }
+
+/* -------------------------------------------------------------- Ring
+
+   Progress as a ring with round ends. The value is the dash on a
+   pathLength of 100, so stroke-dasharray="72 100" is 72%:
+
+     <svg class="ios-ring" viewBox="0 0 40 40" role="img" aria-label="72% of the goal">
+       <circle class="ios-ring__track" cx="20" cy="20" r="16"/>
+       <circle class="ios-ring__value" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="72 100"/>
+     </svg>
+
+   Nest more circles with a smaller r for more than one value. */
+.ios-ring { flex: none; width: 64px; height: 64px; transform: rotate(-90deg); }
+.ios-ring circle { fill: none; stroke-width: 6; }
+.ios-ring__track { stroke: color-mix(in srgb, var(--tint, var(--ios-accent)) 22%, transparent); }
+.ios-ring__value { stroke: var(--tint, var(--ios-accent)); stroke-linecap: round; }
+.ios-ring--large { width: 132px; height: 132px; }
+.ios-ring--large circle { stroke-width: 5; }
+/* A figure in the middle of a ring. */
+.ios-ringfigure { position: relative; display: grid; place-items: center; flex: none; }
+.ios-ringfigure > :not(svg) { position: absolute; text-align: center; }
+
+/* ------------------------------------------------------------- Bars
+
+   A week (or a day) at a glance: rounded columns in the tint at 30%,
+   the current one solid, the labels in caption type underneath. Each
+   column's height is --v, from 0 to 1.
+
+     <div class="ios-bars" role="img" aria-label="Watered on 5 of the last 7 days">
+       <span style="--v:.4"></span> ... <span style="--v:.8" aria-current="true"></span>
+     </div>
+     <div class="ios-bars__labels"><span>M</span> ... <span>S</span></div> */
+.ios-bars {
+  display: flex; align-items: flex-end; gap: 6px;
+  height: 64px;
+}
+.ios-bars > span {
+  flex: 1; min-width: 4px;
+  height: max(4px, calc(var(--v, 0) * 100%));
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--tint, var(--ios-accent)) 30%, transparent);
+}
+.ios-bars > span[aria-current="true"] { background: var(--tint, var(--ios-accent)); }
+.ios-bars__labels {
+  display: flex; gap: 6px; margin-top: 6px;
+  color: var(--ios-label-secondary);
+  font: var(--ios-text-caption2); letter-spacing: var(--ios-track-caption2);
+}
+.ios-bars__labels > span { flex: 1; text-align: center; }
+
+/* A thin capsule for a single fraction: --value from 0% to 100%. */
+.ios-progress {
+  height: 6px; border-radius: 999px; overflow: hidden;
+  background: color-mix(in srgb, var(--tint, var(--ios-accent)) 20%, transparent);
+}
+.ios-progress > span {
+  display: block; height: 100%; width: var(--value, 0%);
+  border-radius: inherit; background: var(--tint, var(--ios-accent));
+}
+
+/* -------------------------------------------------------------- Badge
+
+   A status in a capsule: "Due today", "2 days late", "New". The text
+   is the tint mixed toward the label so it stays readable. */
+.ios-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  min-height: 22px; padding: 2px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tint, var(--ios-accent)) 15%, transparent);
+  color: color-mix(in srgb, var(--tint, var(--ios-accent)) var(--ios-tint-badge-mix), var(--ios-label));
+  font: var(--ios-text-footnote); font-weight: var(--ios-weight-semibold);
+  letter-spacing: var(--ios-track-footnote);
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------- Art
+
+   Artwork drawn from the tint, for when there is no photograph: light
+   from one corner, depth from the other, and a large symbol bleeding
+   off the edge, the way Shortcuts and Fitness draw their tiles. It
+   colours a hero, a tile or a thumbnail and needs no image licence.
+
+     <div class="ios-art"><svg class="ios-art__glyph" ...></svg></div>
+
+   With a real photograph, put an <img class="ios-art__img"> inside
+   instead; it covers the box and the scrim keeps text on it legible.
+   Use the person's own photos or ones whose licence allows it, listed
+   in assets.json -- never a hotlinked image. */
+.ios-art {
+  position: relative; overflow: hidden;
+  background:
+    radial-gradient(120% 90% at 90% 0%, color-mix(in oklab, var(--tint, var(--ios-accent)) 55%, #fff) 0%, transparent 60%),
+    radial-gradient(90% 80% at 0% 100%, color-mix(in oklab, var(--tint, var(--ios-accent)) 62%, #000) 0%, transparent 70%),
+    linear-gradient(160deg, color-mix(in oklab, var(--tint, var(--ios-accent)) 85%, #fff), var(--tint, var(--ios-accent)) 50%, color-mix(in oklab, var(--tint, var(--ios-accent)) 78%, #000));
+  color: #fff;
+}
+/* White words have to hold on any tint, and a yellow or mint brand is
+   too light for them. Where the browser can work in a colour's own
+   lightness, the art keeps the tint's hue and chroma but caps how light
+   it gets, so a pale brand draws as its deeper shade. */
+@supports (color: oklch(from red l c h)) {
+  .ios-art {
+    background:
+      radial-gradient(120% 90% at 90% 0%, oklch(from var(--tint, var(--ios-accent)) min(calc(l + 0.1), 0.72) c h) 0%, transparent 60%),
+      radial-gradient(90% 80% at 0% 100%, oklch(from var(--tint, var(--ios-accent)) min(calc(l * 0.62), 0.36) c h) 0%, transparent 70%),
+      linear-gradient(160deg, oklch(from var(--tint, var(--ios-accent)) min(calc(l + 0.04), 0.66) c h),
+                      oklch(from var(--tint, var(--ios-accent)) min(l, 0.56) c h) 50%,
+                      oklch(from var(--tint, var(--ios-accent)) min(calc(l * 0.78), 0.42) c h));
+  }
+}
+.ios-art__glyph {
+  position: absolute; right: -8%; bottom: -14%;
+  width: 66%; height: auto; aspect-ratio: 1;
+  color: #fff; opacity: .26;
+  pointer-events: none;
+}
+.ios-art__img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover;
+}
+/* Text on art or a photo sits on a scrim, darkest where the text is.
+   It reaches up past the middle, where an eyebrow over a two-line title
+   lands; stopping at 45% left the eyebrow under 4.5:1 on a light tint. */
+.ios-art--scrim::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(to top, rgba(0, 0, 0, .58), rgba(0, 0, 0, .34) 50%, rgba(0, 0, 0, .1) 78%, transparent);
+}
+
+/* -------------------------------------------------------------- Hero
+
+   The card a screen opens with: art or a photo filling it, the words
+   at the bottom over the scrim, optionally one action. */
+.ios-hero {
+  position: relative; display: flex; flex-direction: column; justify-content: flex-end;
+  min-height: 240px; padding: 18px 20px 20px;
+  border-radius: var(--ios-radius-card);
+  overflow: hidden; isolation: isolate;
+  color: #fff; text-decoration: none;
+}
+.ios-hero > .ios-art { position: absolute; inset: 0; z-index: -1; }
+.ios-hero__eyebrow {
+  margin: 0 0 4px;
+  font: var(--ios-text-footnote); font-weight: var(--ios-weight-semibold);
+  letter-spacing: var(--ios-track-footnote);
+  text-transform: uppercase; opacity: .9;
+}
+.ios-hero__title {
+  margin: 0;
+  font: var(--ios-text-title1); font-weight: var(--ios-weight-bold);
+  letter-spacing: var(--ios-track-title1);
+}
+.ios-hero__body {
+  margin: 4px 0 0; max-width: 32ch;
+  font: var(--ios-text-subhead); letter-spacing: var(--ios-track-subhead);
+  opacity: .92;
+}
+.ios-hero .ios-metric__value, .ios-hero .ios-metric__unit, .ios-hero .ios-metric__label { color: inherit; }
+.ios-hero .ios-metric__unit, .ios-hero .ios-metric__label { opacity: .85; }
+.ios-hero__action { align-self: flex-start; margin-top: 14px; }
+
+/* The top of a detail screen given over to the subject: art or a photo
+   running up under the status bar, glass controls floating on it, the
+   title at its foot. Put .ios-statusbar--over on the status bar so it
+   sits on the picture in white. */
+.ios-headerhero {
+  position: relative; isolation: isolate;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  min-height: 360px; padding: 0 var(--ios-gutter) 18px;
+  color: #fff;
+}
+.ios-headerhero > .ios-art { position: absolute; inset: 0; z-index: -1; }
+.ios-headerhero > .ios-navbar { position: absolute; top: 62px; left: 0; right: 0; }
+.ios-headerhero__title {
+  margin: 0;
+  font: 700 34px/41px var(--ios-font); letter-spacing: 0.4px;
+}
+.ios-headerhero__subtitle {
+  margin: 2px 0 0;
+  font: var(--ios-text-subhead); letter-spacing: var(--ios-track-subhead);
+  opacity: .9;
+}
+.ios-statusbar--over {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 4;
+  color: #fff;
+}
+
+/* ------------------------------------------------------------- Stats
+
+   Three or four figures in a row, divided by hairlines: a detail
+   screen's summary, under its hero. */
+.ios-stats {
+  display: flex; margin: 0; padding: 12px 0;
+  border-radius: var(--ios-radius-card);
+  background: var(--ios-bg-card);
+}
+.ios-stats > * {
+  flex: 1; min-width: 0; position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 2px 8px; text-align: center;
+}
+.ios-stats > * + *::before {
+  content: ""; position: absolute; left: 0; top: 6px; bottom: 6px; width: 1px;
+  background: var(--ios-separator); transform: scaleX(.5);
+}
+.ios-stats dt, .ios-stats .ios-stats__label {
+  order: 2;
+  color: var(--ios-label-secondary);
+  font: var(--ios-text-caption1); letter-spacing: var(--ios-track-caption1);
+}
+.ios-stats dd, .ios-stats .ios-stats__value {
+  margin: 0;
+  font: 700 20px/25px var(--ios-font-rounded);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------- Tiles
+
+   A grid of tiles, two across: a symbol in a coloured circle, a count
+   or state on the right, the name underneath. Rooms, lists, places,
+   categories -- whatever the person switches between. */
+.ios-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.ios-tile {
+  position: relative;
+  display: grid; grid-template-columns: auto 1fr; grid-template-areas: "icon count" "title title" "sub sub";
+  align-items: start; row-gap: 2px;
+  min-height: 92px; padding: 12px 14px;
+  border-radius: 22px;
+  background: var(--ios-bg-card);
+  color: var(--ios-label); text-decoration: none;
+}
+.ios-tile__icon {
+  grid-area: icon;
+  display: grid; place-items: center;
+  width: 32px; height: 32px; margin-bottom: 10px;
+  border-radius: 50%;
+  background: var(--tint, var(--ios-accent)); color: #fff;
+}
+.ios-tile__count {
+  grid-area: count; justify-self: end;
+  font: 700 24px/30px var(--ios-font-rounded);
+  font-variant-numeric: tabular-nums;
+}
+.ios-tile__title {
+  grid-area: title;
+  font: var(--ios-text-subhead); font-weight: var(--ios-weight-semibold);
+  letter-spacing: var(--ios-track-subhead);
+}
+.ios-tile__subtitle {
+  grid-area: sub;
+  color: var(--ios-label-secondary);
+  font: var(--ios-text-footnote); letter-spacing: var(--ios-track-footnote);
+}
+/* A tile that is all colour, for the one that matters most right now. */
+.ios-tile--filled { background: var(--tint, var(--ios-accent)); color: #fff; }
+.ios-tile--filled .ios-tile__icon { background: rgba(255, 255, 255, .25); }
+.ios-tile--filled .ios-tile__subtitle { color: rgba(255, 255, 255, .85); }
+
+/* ---------------------------------------------------------- Carousel
+
+   A row that scrolls sideways and snaps, with the next item peeking in
+   so it reads as more. It runs edge to edge; the gutter is its padding. */
+.ios-carousel {
+  display: grid; grid-auto-flow: column; grid-auto-columns: var(--ios-carousel-item, 72%);
+  gap: 12px;
+  margin: 0 calc(-1 * var(--ios-gutter)); padding: 0 var(--ios-gutter);
+  overflow-x: auto; overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory; scroll-padding: 0 var(--ios-gutter);
+  scrollbar-width: none;
+}
+.ios-carousel::-webkit-scrollbar { display: none; }
+.ios-carousel > * { scroll-snap-align: start; }
+
+/* ---------------------------------------------------- Section header
+
+   iOS 26 sets a section header as a title, not a caption: 22pt bold,
+   primary label, with an accent action at its end. */
+.ios-sectionhead {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  margin: 26px 4px 10px;
+  color: var(--ios-label);
+  font: var(--ios-text-title2); font-weight: var(--ios-weight-bold);
+  letter-spacing: var(--ios-track-title2);
+}
+.ios-sectionhead__action {
+  display: inline-flex; align-items: center;
+  min-height: var(--ios-hit-target); margin: -14px -4px; padding: 0 4px;
+  color: var(--accent-text-safe, var(--ios-accent));
+  font: var(--ios-text-body); font-weight: var(--ios-weight-regular);
+  text-decoration: none;
+}
+
+/* ------------------------------------------------------ Home indicator
+
+   The capsule at the foot of every Face ID iPhone, in the label colour.
+   Drawn to its familiar proportion, 134 x 5 and 8pt off the bottom;
+   this one is not measured from the kit. */
+.ios-homeindicator {
+  position: absolute; left: 50%; bottom: 8px; z-index: 5;
+  width: 134px; height: 5px; margin-left: -67px;
+  border-radius: 999px;
+  background: var(--ios-label);
+  pointer-events: none;
+}
+
+/* A filled button on a hero is white: the accent would vanish on art
+   made from the accent. Specific enough to outrank a theme's own
+   filled-button colour. */
+.ios-hero .ios-btn.ios-btn--filled,
+.ios-headerhero .ios-btn.ios-btn--filled { background: #FFFFFF; color: #000000; }
