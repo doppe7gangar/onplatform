@@ -161,9 +161,25 @@ what you ask; the commands are for when you know which step you want.
 | `/onplatform:ask <question>` | The answer from Apple's page itself, with the link, each figure's platform, and quotes checked word for word |
 | `/onplatform:figma [folder]` | Every screen and state into Figma, light and dark |
 | `/onplatform:handoff [design] [app]` | The design into SwiftUI, checked for anything lost on the way |
+| `/onplatform:preview [folder]` | A live preview of a design that reloads itself as it changes; `--phone` to open it on a phone on the same network |
 | `/onplatform:ship [folder]` | Ready to publish: it won't call a design ready while it carries SF Pro, SF Symbols or a file without its licence |
 
-Two agents take the reading-heavy work into their own context, so your
+**A designer to talk to.** Start a whole session as the plugin's designer,
+in an empty folder:
+
+```bash
+claude --agent onplatform:designer
+```
+
+> Design an iPhone app for tracking when my house plants need watering.
+
+It settles the screens with you, scaffolds the project from the measured
+kit, starts a live preview and gives you the address, then builds every
+screen and state while the page reloads in your browser, checks it in a
+real browser and hands it over. In an ordinary session, Claude hands design
+work to it on its own, or ask for it: `@agent-onplatform:designer`.
+
+Two more agents take the reading-heavy work into their own context, so your
 conversation stays on the design. Claude hands work to them when it fits,
 or ask for one by name, e.g. `@agent-onplatform:reviewer look at SettingsView.swift`:
 

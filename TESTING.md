@@ -388,6 +388,18 @@ To try the plugin in Claude Code without installing it, start
 `claude --plugin-dir ~/Documents/GitHub/onplatform` in another folder and run
 `/onplatform:ask how big must a button be on iPhone?`.
 
+### The live preview
+
+```bash
+python3 scripts/eval/test_preview.py
+```
+
+`preview.py` serves a scaffolded design, and the test checks that the page
+arrives with its reload script, other files arrive untouched, nothing
+outside the folder can be read, an open page in Chromium reloads itself
+after a file in the design changes, and `--phone` prints an address for a
+phone.
+
 ### Measure what the plugin adds
 
 ```bash

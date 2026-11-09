@@ -109,10 +109,13 @@ def main():
         fields, body = frontmatter(os.path.join(ROOT, "agents", a))
         supported = {"name", "description", "model", "effort", "maxTurns", "tools",
                      "disallowedTools", "skills", "memory", "background", "isolation", "color"}
+        # The reviewer and the critic report; only the designer writes.
+        writes = fields and fields.get("name") == "designer"
         ok = bool(fields and fields.get("name") and fields.get("description")
                   and fields.get("tools") and set(fields) <= supported
-                  and "Edit" not in fields["tools"] and "Write" not in fields["tools"])
-        expect(f"agent onplatform:{fields and fields.get('name')}: named, described, read-only", ok, fields)
+                  and (writes or ("Edit" not in fields["tools"] and "Write" not in fields["tools"])))
+        expect(f"agent onplatform:{fields and fields.get('name')}: named, described, "
+               + ("can write the design" if writes else "read-only"), ok, fields)
         named += plugin_paths(body)
     hooks_text = open(os.path.join(ROOT, "hooks", "hooks.json")).read()
     json.loads(hooks_text)

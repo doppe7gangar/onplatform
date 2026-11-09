@@ -21,14 +21,17 @@ Scripts live in `${CLAUDE_PLUGIN_ROOT}/.claude/skills/design-workflow/`; below, 
    say what you assumed.
 3. **Scaffold, don't hand-roll:**
    `python3 D/new_project.py --name "<name>" --brand "<#hex>" --kind <ios|ipados|macos|android|web> --model <model> -o ./design`
-4. **Build on the scaffold** with real content and the loading, empty and
+4. **Show it while you build:** start `python3 D/preview.py ./design` in the
+   background and give the person the address. It reloads after every
+   change, so they watch the design come together.
+5. **Build on the scaffold** with real content and the loading, empty and
    error states, keeping the kit's recipes. They carry the measured metrics.
-5. **Check until it passes:** `python3 D/check_design.py ./design`. It taps
+6. **Check until it passes:** `python3 D/check_design.py ./design`. It taps
    every control and fails the ones that do nothing. Then render it with
    `python3 D/render_review.py ./design` and work through the review. For a
    second pair of eyes, hand the folder to the `onplatform:design-critic` agent.
-6. **Licences:** `python3 D/check_distribution.py ./design`.
-7. **Hand over:** what you built, how to open it (`open design/index.html`),
+7. **Licences:** `python3 D/check_distribution.py ./design`.
+8. **Hand over:** what you built, how to open it (`open design/index.html`),
    what passed, what you assumed, and what comes next: `/onplatform:figma` to send
    it to Figma, `/onplatform:handoff` for SwiftUI, and `/onplatform:ship` before it's
    shared or published.

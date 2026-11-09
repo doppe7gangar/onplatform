@@ -74,6 +74,9 @@ jobs:
       - name: What a design hands on
         run: python scripts/eval/test_check_distribution.py
 
+      - name: The live preview
+        run: python scripts/eval/test_preview.py
+
       - name: Third-party licences
         run: |
           python scripts/check_licences.py
