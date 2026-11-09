@@ -156,7 +156,7 @@ what you ask; the commands are for when you know which step you want.
 | Command | What it does |
 |---|---|
 | `/onplatform:design <what you want>` | A brief to a working, checked prototype: settle the screens, scaffold, build, check in a browser, render and review |
-| `/onplatform:check [folder]` | Every mechanical check on a design (taps, states, contrast, use of the kit, licences), fixed until it passes |
+| `/onplatform:check [folder]` | Every mechanical check on a design (taps, states, contrast, use of the kit, licences, the largest text, right to left, long text), fixed until it passes |
 | `/onplatform:review [files]` | A review of SwiftUI, UIKit, AppKit or a design against the HIG: violations, guidance and judgment, each linked to Apple's page |
 | `/onplatform:ask <question>` | The answer from Apple's page itself, with the link, each figure's platform, and quotes checked word for word |
 | `/onplatform:figma [folder]` | Every screen and state into Figma, light and dark |
@@ -175,8 +175,10 @@ claude --agent onplatform:designer
 
 It settles the screens with you, scaffolds the project from the measured
 kit, starts a live preview and gives you the address, then builds every
-screen and state while the page reloads in your browser, checks it in a
-real browser and hands it over. In an ordinary session, Claude hands design
+screen and state while the page reloads in your browser. It checks it in a
+real browser, puts it through the largest text, right to left and long
+text, has the design critic review it and fixes what comes back, at most
+twice, then hands it over. In an ordinary session, Claude hands design
 work to it on its own, or ask for it: `@agent-onplatform:designer`.
 
 Two more agents take the reading-heavy work into their own context, so your
@@ -241,7 +243,11 @@ numbers written into the test, so a recipe can't drift quietly:
 brand theme loads last, the page opens offline, all four states render,
 text clears its contrast in both appearances, and the platform's own
 structure is there: an iPad design with the iPhone's bottom tab bar
-fails, and so does an Android screen in Apple's chrome.
+fails, and so does an Android screen in Apple's chrome. A screen made of
+lists alone fails too, and so does a brand colour that never reaches the
+screen, measured on the rendered page. `stress_test.py` then renders every
+screen at the largest text, right to left and with every string 40%
+longer, and fails text that is cut off, runs off the screen or collides.
 `python3 scripts/doctor.py` checks that every count and path in these
 docs is still true.
 

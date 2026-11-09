@@ -238,7 +238,7 @@
   letter-spacing: var(--ios-track-large-title); color: var(--ios-label-vibrant);
 }
 .ipad-title p, .ipad-title__subtitle {
-  margin: 0; font: 510 15px/20px var(--ios-font); letter-spacing: -0.23px;
+  margin: 0; font: 510 0.9375rem/1.25rem var(--ios-font); letter-spacing: -0.23px;
   color: var(--ios-label-vibrant-secondary);
 }
 
@@ -261,7 +261,7 @@
 .ipad-tabbar__item {
   position: relative; display: inline-flex; align-items: center; justify-content: center;
   height: 36px; padding: 0 18px; margin: 0; border: 0; border-radius: 999px; background: none;
-  font: 510 15px/20px var(--ios-font); letter-spacing: -0.23px;
+  font: 510 0.9375rem/1.25rem var(--ios-font); letter-spacing: -0.23px;
   color: var(--ios-label-vibrant); white-space: nowrap; cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }

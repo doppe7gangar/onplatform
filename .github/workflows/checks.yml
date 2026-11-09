@@ -80,6 +80,9 @@ jobs:
       - name: Each row opens its own record
         run: python scripts/eval/test_prototype.py
 
+      - name: Largest text, right to left, long text
+        run: python scripts/eval/test_stress.py
+
       - name: Third-party licences
         run: |
           python scripts/check_licences.py

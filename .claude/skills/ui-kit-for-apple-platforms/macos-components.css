@@ -1297,3 +1297,19 @@
 @media (prefers-reduced-motion: reduce) {
   .mac-switch span, .mac-switch span::after { transition: none; }
 }
+
+/* ------------------------------------------------------- Right to left
+
+   In Arabic or Hebrew the whole layout mirrors, and so do the symbols
+   that point along the reading direction -- but only the ones named for
+   it. SF Symbols flips chevron.backward, chevron.forward and the other
+   .backward/.forward and .leading/.trailing names; chevron.left points
+   left in every language.
+   Name a back button chevron.backward and a disclosure chevron.forward,
+   and these rules mirror the stand-ins the way the real symbols mirror. */
+[dir="rtl"] [data-sf-symbol*=".backward"],
+[dir="rtl"] [data-sf-symbol*=".forward"],
+[dir="rtl"] [data-sf-symbol*=".leading"],
+[dir="rtl"] [data-sf-symbol*=".trailing"],
+[dir="rtl"] [data-sf-symbol^="arrow.uturn.backward"],
+[dir="rtl"] [data-sf-symbol^="arrow.uturn.forward"] { transform: scaleX(-1); }

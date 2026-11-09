@@ -1350,7 +1350,7 @@ body {
 .ios-largetitle h1,
 .ios-largetitle__title {
   margin: 0;
-  font: 700 34px/41px var(--ios-font);
+  font: 700 2.125rem/2.5625rem var(--ios-font);
   letter-spacing: 0.4px;
   color: var(--ios-label-vibrant);
 }
@@ -1410,7 +1410,7 @@ body {
   border-top: 0.5px solid var(--ios-separator-opaque, #C6C6C8);
   background: color-mix(in srgb, var(--ios-bg-primary, #FFFFFF) 82%, transparent);
   backdrop-filter: blur(25px);
-  font: 590 17px/22px var(--ios-font);
+  font: 590 1.0625rem/1.375rem var(--ios-font);
   letter-spacing: -0.43px;
   color: var(--ios-label-secondary);
 }
@@ -1461,15 +1461,15 @@ body {
   display: grid; place-items: center;
   width: 50px; height: 50px; margin-bottom: 16px; border-radius: 50%;
   background: color-mix(in srgb, var(--ios-accent) 15%, transparent);
-  color: var(--ios-accent); font: 590 22px/1 var(--ios-font);
+  color: var(--ios-accent); font: 590 1.375rem/1 var(--ios-font);
 }
-.ios-empty--circle .ios-empty__title { font: 590 22px/1.2 var(--ios-font); letter-spacing: -0.26px; }
+.ios-empty--circle .ios-empty__title { font: 590 1.375rem/1.2 var(--ios-font); letter-spacing: -0.26px; }
 .ios-empty--circle .ios-empty__body {
   margin-top: 0; margin-bottom: 0; max-width: none;
-  font: 510 22px/1.2 var(--ios-font); letter-spacing: -0.26px;
+  font: 510 1.375rem/1.2 var(--ios-font); letter-spacing: -0.26px;
 }
 .ios-empty--circle .ios-empty__action {
-  min-height: 52px; margin: auto 0 0; font: 510 17px/18px var(--ios-font);
+  min-height: 52px; margin: auto 0 0; font: 510 1.0625rem/1.125rem var(--ios-font);
 }
 /* Apple's empty state fills the whole screen behind the bars, so the
    message centres on the screen, not on what the title leaves. */
@@ -1583,7 +1583,7 @@ body {
   letter-spacing: var(--ios-track-footnote);
 }
 .ios-metric__value {
-  font: 700 28px/34px var(--ios-font-rounded);
+  font: 700 1.75rem/2.125rem var(--ios-font-rounded);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.38px;
   color: var(--ios-label);
@@ -1596,7 +1596,7 @@ body {
 }
 .ios-metric--tinted .ios-metric__value { color: color-mix(in srgb, var(--tint, var(--ios-accent)) var(--ios-tint-text-mix), var(--ios-label)); }
 /* The one figure a screen is about, on its hero. */
-.ios-metric--hero .ios-metric__value { font: 700 56px/60px var(--ios-font-rounded); letter-spacing: -0.5px; }
+.ios-metric--hero .ios-metric__value { font: 700 3.5rem/3.75rem var(--ios-font-rounded); letter-spacing: -0.5px; }
 .ios-metric--hero .ios-metric__unit { font: var(--ios-text-title3); font-weight: var(--ios-weight-semibold); }
 
 /* -------------------------------------------------------------- Ring
@@ -1772,7 +1772,7 @@ body {
 .ios-headerhero > .ios-navbar { position: absolute; top: 62px; left: 0; right: 0; }
 .ios-headerhero__title {
   margin: 0;
-  font: 700 34px/41px var(--ios-font); letter-spacing: 0.4px;
+  font: 700 2.125rem/2.5625rem var(--ios-font); letter-spacing: 0.4px;
 }
 .ios-headerhero__subtitle {
   margin: 2px 0 0;
@@ -1809,7 +1809,7 @@ body {
 }
 .ios-stats dd, .ios-stats .ios-stats__value {
   margin: 0;
-  font: 700 20px/25px var(--ios-font-rounded);
+  font: 700 1.25rem/1.5625rem var(--ios-font-rounded);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1837,7 +1837,7 @@ body {
 }
 .ios-tile__count {
   grid-area: count; justify-self: end;
-  font: 700 24px/30px var(--ios-font-rounded);
+  font: 700 1.5rem/1.875rem var(--ios-font-rounded);
   font-variant-numeric: tabular-nums;
 }
 .ios-tile__title {
@@ -1907,3 +1907,20 @@ body {
    filled-button colour. */
 .ios-hero .ios-btn.ios-btn--filled,
 .ios-headerhero .ios-btn.ios-btn--filled { background: #FFFFFF; color: #000000; }
+
+/* ------------------------------------------------------- Right to left
+
+   In Arabic or Hebrew the whole layout mirrors, and so do the symbols
+   that point along the reading direction -- but only the ones named for
+   it. SF Symbols flips chevron.backward, chevron.forward and the other
+   .backward/.forward and .leading/.trailing names; chevron.left points
+   left in every language.
+   Name a back button chevron.backward and a disclosure chevron.forward,
+   and these rules mirror the stand-ins the way the real symbols mirror. */
+[dir="rtl"] [data-sf-symbol*=".backward"],
+[dir="rtl"] [data-sf-symbol*=".forward"],
+[dir="rtl"] [data-sf-symbol*=".leading"],
+[dir="rtl"] [data-sf-symbol*=".trailing"],
+[dir="rtl"] [data-sf-symbol^="arrow.uturn.backward"],
+[dir="rtl"] [data-sf-symbol^="arrow.uturn.forward"],
+[dir="rtl"] .ios-list__chevron { transform: scaleX(-1); }

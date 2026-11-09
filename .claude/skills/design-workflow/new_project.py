@@ -825,7 +825,7 @@ __STATUSBAR__
       <nav class="ipad-sidebar" aria-label="__NAME__">
         <div class="ipad-sidebar__toolbar">
           <div class="ios-glass ios-controls"><button class="ios-controls__item">Edit</button></div>
-          <div class="ipad-trailing"><div class="ios-glass ios-controls"><button class="ios-controls__item" aria-label="Hide sidebar" data-sf-symbol="sidebar.left">__SIDEBAR__</button></div></div>
+          <div class="ipad-trailing"><div class="ios-glass ios-controls"><button class="ios-controls__item" aria-label="Hide sidebar" data-sf-symbol="sidebar.leading">__SIDEBAR__</button></div></div>
         </div>
         <label class="ipad-search"><span data-sf-symbol="magnifyingglass">__SEARCH__</span><input type="search" placeholder="Search" aria-label="Search __THING__"></label>
 __SIDEBAR_ROWS__
@@ -1873,6 +1873,9 @@ def main():
             else html.rstrip("\n") + "\n" + tag)
     with open(os.path.join(out, "index.html"), "w", encoding="utf-8") as f:
         f.write(html)
+    # The review tools' screenshots are for looking at, not for committing.
+    with open(os.path.join(out, ".gitignore"), "a", encoding="utf-8") as f:
+        f.write("# Screenshots from render_review.py and stress_test.py\n.visual-review/\n")
 
     readme = (README.replace("__NAME__", a.name)
               .replace("__BRAND__", a.brand)

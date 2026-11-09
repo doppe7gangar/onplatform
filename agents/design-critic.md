@@ -19,7 +19,10 @@ names the platform.
    Report its failures as they stand: they come before taste.
 2. **Look at it.** `python3 S/design-workflow/render_review.py <folder>` renders
    the screens into `<folder>/.visual-review/`. Open each screenshot with Read
-   and look at it.
+   and look at it. Then `python3 S/design-workflow/stress_test.py <folder>`
+   renders them at the largest text, right to left and with longer strings,
+   into `.visual-review/stress/`; look at the main screen in each, and report
+   its failures with the rest.
 3. **Compare with the real thing.** Hold each screen against the closest of the
    platform's own examples: `S/ui-kit-for-apple-platforms/ios-screens.html` for iPhone,
    `S/ui-kit-for-apple-platforms/ipad-example.html` for iPad, `S/ui-kit-for-apple-platforms/mac-example.html`

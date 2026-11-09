@@ -28,10 +28,16 @@ Scripts live in `${CLAUDE_PLUGIN_ROOT}/.claude/skills/design-workflow/`; below, 
    error states, keeping the kit's recipes. They carry the measured metrics.
 6. **Check until it passes:** `python3 D/check_design.py ./design`. It taps
    every control and fails the ones that do nothing. Then render it with
-   `python3 D/render_review.py ./design` and work through the review. For a
-   second pair of eyes, hand the folder to the `onplatform:design-critic` agent.
-7. **Licences:** `python3 D/check_distribution.py ./design`.
-8. **Hand over:** what you built, how to open it (`open design/index.html`),
+   `python3 D/render_review.py ./design` and work through the review.
+7. **Stress it:** `python3 D/stress_test.py ./design` renders every screen at
+   the largest text, right to left and with longer strings. Fix what fails
+   and look at the renders in `design/.visual-review/stress/`.
+8. **Second opinion, then fix, at most twice.** Hand the folder to the
+   `onplatform:design-critic` agent. Fix the changes it ranks highest, run
+   `check_design.py` again, and send it back once more if it asked for more
+   than three. Say in the handover what you left and why.
+9. **Licences:** `python3 D/check_distribution.py ./design`.
+10. **Hand over:** what you built, how to open it (`open design/index.html`),
    what passed, what you assumed, and what comes next: `/onplatform:figma` to send
    it to Figma, `/onplatform:handoff` for SwiftUI, and `/onplatform:ship` before it's
    shared or published.

@@ -1,7 +1,7 @@
 ---
 name: designer
 description: Designs an app, site or dashboard from a brief, as a tappable prototype that reads as native on iPhone, iPad, Mac or Android, and serves it as a live preview while it builds. Use when someone wants a design made rather than a rule looked up ("design me an app for…", "make the iPad version", "redesign this screen"). Run a whole session as it with `claude --agent onplatform:designer`.
-tools: Read, Write, Edit, Glob, Grep, Bash, Skill, WebFetch, TodoWrite
+tools: Read, Write, Edit, Glob, Grep, Bash, Skill, WebFetch, TodoWrite, Agent
 color: green
 ---
 
@@ -39,7 +39,21 @@ brings in `S/hig-guide/` for Apple's rules, `S/ui-kit-for-apple-platforms/` and
 5. **Check until it passes:** `python3 S/design-workflow/check_design.py ./design`,
    then render and review it with `python3 S/design-workflow/render_review.py ./design`
    and look at the screenshots. Fix at the source, not with overrides.
-6. **Hand over:** the preview address and `open design/index.html`, what each
+6. **Stress it:** `python3 S/design-workflow/stress_test.py ./design` renders
+   every screen at the largest text, right to left and with longer strings.
+   Fix what fails, and look at the main screen's renders in
+   `design/.visual-review/stress/`.
+7. **Second opinion, then fix, at most twice.** Hand the folder to the
+   `onplatform:design-critic` agent with the Agent tool: "Critique ./design".
+   Fix the changes it ranks highest -- what the kit measures before what is
+   taste -- and run the checks again. If it asked for more than three
+   changes, send it back for a second round; stop after that and say in the
+   handover what you left and why. When you can't start an agent (you are
+   running as one yourself), do the critique as a separate pass: follow
+   `${CLAUDE_PLUGIN_ROOT}/agents/design-critic.md` against the screenshots
+   alone, before you reread `DESIGN.md`, so you judge what is on the screen
+   and not what you meant.
+8. **Hand over:** the preview address and `open design/index.html`, what each
    screen does, what passed, what you assumed, and the next steps: Figma
    (`S/design-workflow/export_figma.py`), SwiftUI (step 17 of the skill), and
    `S/design-workflow/check_distribution.py ./design --purpose publish` before

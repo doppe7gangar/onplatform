@@ -397,6 +397,14 @@ class Audit:
                     dirs.remove(d)
                     if d == "node_modules":
                         skipped.append(os.path.relpath(os.path.join(dirpath, d), self.root))
+                elif d == ".visual-review":
+                    # Screenshots render_review.py and stress_test.py took of
+                    # this design: review output, not something it ships.
+                    dirs.remove(d)
+                    if self.purpose == "publish":
+                        self.warns.append(".visual-review/: the review tools' screenshots of this design, "
+                                          "not audited. Leave them out of what you publish; the "
+                                          "scaffold's .gitignore keeps them out of commits")
             for n in names:
                 if n not in IGNORE_FILES:
                     out.append(os.path.relpath(os.path.join(dirpath, n), self.root).replace(os.sep, "/"))

@@ -63,38 +63,38 @@
   /* ---- Type: Roboto, the kit's 15 styles. Each has a shorthand for
      `font:` and its tracking, which `font:` can't carry. */
   --m3-font: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --m3-type-display-large: 400 57px/64px var(--m3-font);   --m3-track-display-large: -0.25px;
-  --m3-type-display-medium: 400 45px/52px var(--m3-font);  --m3-track-display-medium: 0;
-  --m3-type-display-small: 400 36px/44px var(--m3-font);   --m3-track-display-small: 0;
-  --m3-type-headline-large: 400 32px/40px var(--m3-font);  --m3-track-headline-large: 0;
-  --m3-type-headline-medium: 400 28px/36px var(--m3-font); --m3-track-headline-medium: 0;
-  --m3-type-headline-small: 400 24px/32px var(--m3-font);  --m3-track-headline-small: 0;
-  --m3-type-title-large: 400 22px/28px var(--m3-font);     --m3-track-title-large: 0;
-  --m3-type-title-medium: 500 16px/24px var(--m3-font);    --m3-track-title-medium: 0.15px;
-  --m3-type-title-small: 500 14px/20px var(--m3-font);     --m3-track-title-small: 0.1px;
-  --m3-type-body-large: 400 16px/24px var(--m3-font);      --m3-track-body-large: 0.5px;
-  --m3-type-body-medium: 400 14px/20px var(--m3-font);     --m3-track-body-medium: 0.25px;
-  --m3-type-body-small: 400 12px/16px var(--m3-font);      --m3-track-body-small: 0.4px;
-  --m3-type-label-large: 500 14px/20px var(--m3-font);     --m3-track-label-large: 0.1px;
-  --m3-type-label-medium: 500 12px/16px var(--m3-font);    --m3-track-label-medium: 0.5px;
-  --m3-type-label-small: 500 11px/16px var(--m3-font);     --m3-track-label-small: 0.5px;
+  --m3-type-display-large: 400 3.5625rem/4rem var(--m3-font);   --m3-track-display-large: -0.25px;
+  --m3-type-display-medium: 400 2.8125rem/3.25rem var(--m3-font);  --m3-track-display-medium: 0;
+  --m3-type-display-small: 400 2.25rem/2.75rem var(--m3-font);   --m3-track-display-small: 0;
+  --m3-type-headline-large: 400 2rem/2.5rem var(--m3-font);  --m3-track-headline-large: 0;
+  --m3-type-headline-medium: 400 1.75rem/2.25rem var(--m3-font); --m3-track-headline-medium: 0;
+  --m3-type-headline-small: 400 1.5rem/2rem var(--m3-font);  --m3-track-headline-small: 0;
+  --m3-type-title-large: 400 1.375rem/1.75rem var(--m3-font);     --m3-track-title-large: 0;
+  --m3-type-title-medium: 500 1rem/1.5rem var(--m3-font);    --m3-track-title-medium: 0.15px;
+  --m3-type-title-small: 500 0.875rem/1.25rem var(--m3-font);     --m3-track-title-small: 0.1px;
+  --m3-type-body-large: 400 1rem/1.5rem var(--m3-font);      --m3-track-body-large: 0.5px;
+  --m3-type-body-medium: 400 0.875rem/1.25rem var(--m3-font);     --m3-track-body-medium: 0.25px;
+  --m3-type-body-small: 400 0.75rem/1rem var(--m3-font);      --m3-track-body-small: 0.4px;
+  --m3-type-label-large: 500 0.875rem/1.25rem var(--m3-font);     --m3-track-label-large: 0.1px;
+  --m3-type-label-medium: 500 0.75rem/1rem var(--m3-font);    --m3-track-label-medium: 0.5px;
+  --m3-type-label-small: 500 0.6875rem/1rem var(--m3-font);     --m3-track-label-small: 0.5px;
   /* The emphasized styles: 500 for display, headline, title large and
      body; 600 for title medium and small and the labels. */
-  --m3-type-display-large-emphasized: 500 57px/64px var(--m3-font);
-  --m3-type-display-medium-emphasized: 500 45px/52px var(--m3-font);
-  --m3-type-display-small-emphasized: 500 36px/44px var(--m3-font);
-  --m3-type-headline-large-emphasized: 500 32px/40px var(--m3-font);
-  --m3-type-headline-medium-emphasized: 500 28px/36px var(--m3-font);
-  --m3-type-headline-small-emphasized: 500 24px/32px var(--m3-font);
-  --m3-type-title-large-emphasized: 500 22px/28px var(--m3-font);
-  --m3-type-title-medium-emphasized: 600 16px/24px var(--m3-font);
-  --m3-type-title-small-emphasized: 600 14px/20px var(--m3-font);
-  --m3-type-body-large-emphasized: 500 16px/24px var(--m3-font);
-  --m3-type-body-medium-emphasized: 500 14px/20px var(--m3-font);
-  --m3-type-body-small-emphasized: 500 12px/16px var(--m3-font);
-  --m3-type-label-large-emphasized: 600 14px/20px var(--m3-font);
-  --m3-type-label-medium-emphasized: 600 12px/16px var(--m3-font);
-  --m3-type-label-small-emphasized: 600 11px/16px var(--m3-font);
+  --m3-type-display-large-emphasized: 500 3.5625rem/4rem var(--m3-font);
+  --m3-type-display-medium-emphasized: 500 2.8125rem/3.25rem var(--m3-font);
+  --m3-type-display-small-emphasized: 500 2.25rem/2.75rem var(--m3-font);
+  --m3-type-headline-large-emphasized: 500 2rem/2.5rem var(--m3-font);
+  --m3-type-headline-medium-emphasized: 500 1.75rem/2.25rem var(--m3-font);
+  --m3-type-headline-small-emphasized: 500 1.5rem/2rem var(--m3-font);
+  --m3-type-title-large-emphasized: 500 1.375rem/1.75rem var(--m3-font);
+  --m3-type-title-medium-emphasized: 600 1rem/1.5rem var(--m3-font);
+  --m3-type-title-small-emphasized: 600 0.875rem/1.25rem var(--m3-font);
+  --m3-type-body-large-emphasized: 500 1rem/1.5rem var(--m3-font);
+  --m3-type-body-medium-emphasized: 500 0.875rem/1.25rem var(--m3-font);
+  --m3-type-body-small-emphasized: 500 0.75rem/1rem var(--m3-font);
+  --m3-type-label-large-emphasized: 600 0.875rem/1.25rem var(--m3-font);
+  --m3-type-label-medium-emphasized: 600 0.75rem/1rem var(--m3-font);
+  --m3-type-label-small-emphasized: 600 0.6875rem/1rem var(--m3-font);
 
   /* ---- Shape: the kit's corner scale. */
   --md-sys-shape-corner-none: 0;
@@ -903,3 +903,16 @@ button.m3-list__item { width: 100%; margin: 0; border: 0; background-color: tran
 @media (prefers-reduced-motion: reduce) {
   .m3-device *, .m3-device *::before, .m3-device *::after { transition-duration: 0s !important; animation-duration: 0s !important; }
 }
+
+/* ------------------------------------------------------- Right to left
+
+   Icons that point along the reading direction flip with the layout in
+   Arabic or Hebrew: back and forward arrows, chevrons, send, reply,
+   undo and redo. The rest keep their direction. */
+[dir="rtl"] [data-icon="arrow_back"], [dir="rtl"] [data-icon="arrow_forward"],
+[dir="rtl"] [data-icon="arrow_back_ios"], [dir="rtl"] [data-icon="arrow_forward_ios"],
+[dir="rtl"] [data-icon="chevron_left"], [dir="rtl"] [data-icon="chevron_right"],
+[dir="rtl"] [data-icon="navigate_before"], [dir="rtl"] [data-icon="navigate_next"],
+[dir="rtl"] [data-icon="keyboard_arrow_left"], [dir="rtl"] [data-icon="keyboard_arrow_right"],
+[dir="rtl"] [data-icon="send"], [dir="rtl"] [data-icon="reply"], [dir="rtl"] [data-icon="undo"],
+[dir="rtl"] [data-icon="redo"] { transform: scaleX(-1); }
