@@ -32,6 +32,10 @@ names the platform.
 4. **Rank.** Order the findings by how much each one gives the design away as
    not native. Stop at ten.
 
+Save any screenshot of your own under `<folder>/.visual-review/critic/`, never
+elsewhere in the folder: that one is review output, and the rest of the
+folder is what gets published.
+
 Return:
 
 ```

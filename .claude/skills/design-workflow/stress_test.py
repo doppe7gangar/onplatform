@@ -41,6 +41,8 @@ import check_design  # noqa: E402  (platform detection, browser path)
 # content viewer on a long press instead -- and the status bar never does.
 BARS = (".ios-tabbar, .ios-navbar, .ipad-tabbar, .ipad-statusbar, .ios-statusbar, .m3-statusbar, "
         ".m3-navbar, .m3-navrail, .m3-topappbar, .mac-toolbar, .mac-sidebar, .proto-toast, .demo__bar")
+# Nor do a stepper's minus and plus or a switch: controls keep their size.
+FIXED = BARS + ", .ios-stepper, .ios-switch, .m3-switch"
 
 # For the screenshot only: the frame grows to its content's height.
 EXPAND_CSS = (".device, .ipad, .mac-window, .m3-device { height: auto !important; max-height: none !important; }"
@@ -97,7 +99,7 @@ SHOW_JS = """([kind, id]) => {
     .forEach(s => { s.scrollTop = 0; });
 }"""
 
-MEASURE_JS = r"""([bars]) => {
+MEASURE_JS = r"""([bars, fixedSel]) => {
   const all = [...document.querySelectorAll('*')];
   const index = new Map(all.map((e, i) => [e, i]));
   const box = e => {
@@ -151,7 +153,7 @@ MEASURE_JS = r"""([bars]) => {
       }
     }
     texts.push({i: index.get(e), t: e.textContent.trim().replace(/\s+/g, ' ').slice(0, 40),
-      b, fs: parseFloat(cs.fontSize), bar: !!e.closest(bars),
+      b, fs: parseFloat(cs.fontSize), bar: !!e.closest(bars), fixed: !!e.closest(fixedSel),
       cut, ellipsis, off: !inScroller && (b.r > fr.right + 1 || b.l < fr.left - 1)});
   }
   const overlaps = [];
@@ -238,7 +240,7 @@ def run(root, only, scale_override):
         for kind, ident in places:
             pg.evaluate(SHOW_JS, [kind, ident])
             pg.wait_for_timeout(60)
-            base[(kind, ident)] = pg.evaluate(MEASURE_JS, [BARS])
+            base[(kind, ident)] = pg.evaluate(MEASURE_JS, [BARS, FIXED])
         pg.close()
 
         for cond in conds:
@@ -246,7 +248,7 @@ def run(root, only, scale_override):
             for kind, ident in places:
                 pg.evaluate(SHOW_JS, [kind, ident])
                 pg.wait_for_timeout(80)
-                m = pg.evaluate(MEASURE_JS, [BARS])
+                m = pg.evaluate(MEASURE_JS, [BARS, FIXED])
                 where = (f"sheet {ident}" if kind == "sheet" else f"screen {ident}" if ident else "the page")
                 shot = f"{cond}-{kind}-{ident or 'page'}.png"
                 # The screenshot runs the screen's whole length: what breaks
@@ -282,7 +284,7 @@ def run(root, only, scale_override):
                                      "; ".join(f"\"{t['t']}\"" for t in trunc[:4])))
                 if cond == "text":
                     fs0 = {t["i"]: t["fs"] for t in was["texts"]}
-                    still = [t for t in m["texts"] if not t["bar"] and t["i"] in fs0
+                    still = [t for t in m["texts"] if not t["fixed"] and t["i"] in fs0
                              and t["fs"] < fs0[t["i"]] * 1.2]
                     if still:
                         findings.append(("warn", cond, where, f"{len(still)} text run(s) don't grow with the text "
