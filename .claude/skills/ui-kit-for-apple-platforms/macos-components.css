@@ -1131,6 +1131,169 @@
 .mac-group__row + .mac-group__row { border-top: 1px solid var(--mac-separator); }
 .mac-group__header { margin: 0 0 6px 4px; font: 700 11px/14px var(--mac-font); color: var(--mac-label-secondary); }
 
+/* ======================================================= Content first
+
+   A Mac window of tables and grouped settings alone reads as a utility.
+   Music, Weather, Home and Stocks open on the content -- a picture, a
+   figure, a chart, a run of tiles -- and keep the table for the long
+   tail. These are the iPhone kit's content parts at Mac sizes: 13pt
+   text, 12pt corners, a 5% fill on the white content area rather than a
+   white card on grey. Composed, not measured: Apple's kit draws the
+   controls, not the apps.
+
+   Each takes its colour from --tint, and with none set from the accent,
+   so the brand colours all of them; set --tint or a .mac-tint-* class
+   on a card and what's inside follows. */
+
+:root {
+  --mac-font-rounded: ui-rounded, "SF Pro Rounded", var(--mac-font);
+  --mac-radius-card: 12px;
+  /* Tinted text mixed toward black until it clears 4.5:1 on the card's
+     fill; yellow, the hardest, needs 50%. Toward white in dark. */
+  --mac-tint-ink: #000;
+  --mac-tint-text-mix: 50%;
+  --mac-tint-badge-mix: 45%;   /* on its own 15% wash */
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --mac-tint-ink: #fff; --mac-tint-text-mix: 80%; --mac-tint-badge-mix: 80%; }
+}
+:root[data-theme="dark"] { --mac-tint-ink: #fff; --mac-tint-text-mix: 80%; --mac-tint-badge-mix: 80%; }
+
+.mac-tint-accent { --tint: var(--mac-accent); }
+.mac-tint-red    { --tint: var(--ios-red, #FF383C); }
+.mac-tint-orange { --tint: var(--ios-orange, #FF8D28); }
+.mac-tint-yellow { --tint: var(--ios-yellow, #FFCC00); }
+.mac-tint-green  { --tint: var(--ios-green, #34C759); }
+.mac-tint-mint   { --tint: var(--ios-mint, #00C8B3); }
+.mac-tint-teal   { --tint: var(--ios-teal, #00C3D0); }
+.mac-tint-cyan   { --tint: var(--ios-cyan, #00C0E8); }
+.mac-tint-blue   { --tint: var(--mac-system-blue); }
+.mac-tint-indigo { --tint: var(--ios-indigo, #6155F5); }
+.mac-tint-purple { --tint: var(--ios-purple, #CB30E0); }
+.mac-tint-pink   { --tint: var(--ios-pink, #FF2D55); }
+.mac-tint-brown  { --tint: var(--ios-brown, #AC7F5E); }
+
+/* A summary across the top of the content: a hero and cards side by side. */
+.mac-summary {
+  display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 12px;
+  margin: 4px 0 20px;
+}
+.mac-summary > .mac-hero { grid-row: span 2; }
+/* A narrow window stacks it: beside the 240pt sidebar there is no room
+   for two columns under about 860pt. */
+@media (max-width: 860px) {
+  .mac-summary { grid-template-columns: 1fr; }
+  .mac-summary > .mac-hero { grid-row: auto; }
+}
+
+.mac-card {
+  display: block; position: relative; margin: 0;
+  padding: 10px 12px 12px;
+  border-radius: var(--mac-radius-card);
+  background: var(--mac-stripe);
+  color: var(--mac-label); text-decoration: none;
+}
+.mac-card__head {
+  display: flex; align-items: center; gap: 5px; margin-bottom: 6px;
+  color: color-mix(in srgb, var(--tint, var(--mac-accent)) var(--mac-tint-text-mix), var(--mac-tint-ink));
+  font: 600 12px/15px var(--mac-font);
+}
+.mac-card__head svg { flex: none; width: 14px; height: 14px; color: var(--tint, var(--mac-accent)); }
+.mac-card__meta { margin-left: auto; color: var(--mac-label-secondary); font: var(--mac-text-subheadline); }
+.mac-card__split { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+
+.mac-metric { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.mac-metric__value { font: 700 24px/28px var(--mac-font-rounded); font-variant-numeric: tabular-nums; }
+.mac-metric__unit { margin-left: 3px; color: var(--mac-label-secondary); font: 600 13px/16px var(--mac-font); }
+.mac-metric__label { color: var(--mac-label-secondary); font: var(--mac-text-subheadline); }
+
+.mac-ring { flex: none; width: 48px; height: 48px; transform: rotate(-90deg); }
+.mac-ring circle { fill: none; stroke-width: 6; }
+.mac-ring__track { stroke: color-mix(in srgb, var(--tint, var(--mac-accent)) 22%, transparent); }
+.mac-ring__value { stroke: var(--tint, var(--mac-accent)); stroke-linecap: round; }
+
+.mac-bars { display: flex; align-items: flex-end; gap: 4px; height: 48px; }
+.mac-bars > span {
+  flex: 1; min-width: 3px; height: max(3px, calc(var(--v, 0) * 100%));
+  border-radius: 3px; background: color-mix(in srgb, var(--tint, var(--mac-accent)) 30%, transparent);
+}
+.mac-bars > span[aria-current="true"] { background: var(--tint, var(--mac-accent)); }
+.mac-bars__labels { display: flex; gap: 4px; margin-top: 4px; color: var(--mac-label-secondary); font: var(--mac-text-caption1); }
+.mac-bars__labels > span { flex: 1; text-align: center; }
+
+.mac-badge {
+  display: inline-flex; align-items: center; min-height: 18px; padding: 1px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tint, var(--mac-accent)) 15%, transparent);
+  color: color-mix(in srgb, var(--tint, var(--mac-accent)) var(--mac-tint-badge-mix), var(--mac-tint-ink));
+  font: 600 11px/14px var(--mac-font); white-space: nowrap;
+}
+
+.mac-art {
+  position: relative; overflow: hidden; color: #fff;
+  background:
+    radial-gradient(120% 90% at 90% 0%, color-mix(in oklab, var(--tint, var(--mac-accent)) 55%, #fff) 0%, transparent 60%),
+    radial-gradient(90% 80% at 0% 100%, color-mix(in oklab, var(--tint, var(--mac-accent)) 62%, #000) 0%, transparent 70%),
+    linear-gradient(160deg, color-mix(in oklab, var(--tint, var(--mac-accent)) 85%, #fff), var(--tint, var(--mac-accent)) 50%,
+                    color-mix(in oklab, var(--tint, var(--mac-accent)) 78%, #000));
+}
+@supports (color: oklch(from red l c h)) {
+  .mac-art {
+    background:
+      radial-gradient(120% 90% at 90% 0%, oklch(from var(--tint, var(--mac-accent)) min(calc(l + 0.1), 0.72) c h) 0%, transparent 60%),
+      radial-gradient(90% 80% at 0% 100%, oklch(from var(--tint, var(--mac-accent)) min(calc(l * 0.62), 0.36) c h) 0%, transparent 70%),
+      linear-gradient(160deg, oklch(from var(--tint, var(--mac-accent)) min(calc(l + 0.04), 0.66) c h),
+                      oklch(from var(--tint, var(--mac-accent)) min(l, 0.56) c h) 50%,
+                      oklch(from var(--tint, var(--mac-accent)) min(calc(l * 0.78), 0.42) c h));
+  }
+}
+.mac-art__glyph { position: absolute; right: -6%; bottom: -16%; width: 52%; height: auto; aspect-ratio: 1; opacity: .26; pointer-events: none; }
+.mac-art__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.mac-art--scrim::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(to top, rgba(0, 0, 0, .58), rgba(0, 0, 0, .34) 50%, rgba(0, 0, 0, .1) 78%, transparent);
+}
+
+.mac-hero {
+  position: relative; isolation: isolate; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  min-height: 200px; padding: 16px 20px 18px;
+  border-radius: var(--mac-radius-card);
+  color: #fff; text-decoration: none;
+}
+.mac-hero > .mac-art { position: absolute; inset: 0; z-index: -1; }
+.mac-hero__eyebrow { margin: 0 0 3px; font: 700 11px/14px var(--mac-font); text-transform: uppercase; letter-spacing: .3px; opacity: .9; }
+.mac-hero__title { margin: 0; font: 700 22px/26px var(--mac-font); letter-spacing: -.26px; }
+.mac-hero__body { margin: 3px 0 0; font: var(--mac-text-body); opacity: .92; }
+.mac-hero__action { align-self: flex-start; margin-top: 12px; }
+.mac-hero .mac-btn { background: #fff; color: #000; }
+
+.mac-stats { display: flex; padding: 8px 0; border-radius: var(--mac-radius-card); background: var(--mac-stripe); }
+.mac-stats > * { flex: 1; min-width: 0; position: relative; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 2px 8px; }
+.mac-stats > * + *::before { content: ""; position: absolute; left: 0; top: 4px; bottom: 4px; width: 1px; background: var(--mac-separator); }
+.mac-stats dt { order: 2; color: var(--mac-label-secondary); font: var(--mac-text-subheadline); }
+.mac-stats dd { margin: 0; font: 700 17px/22px var(--mac-font-rounded); font-variant-numeric: tabular-nums; }
+
+.mac-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.mac-tile {
+  display: grid; grid-template-columns: auto 1fr; grid-template-areas: "icon count" "title title" "sub sub";
+  row-gap: 1px; align-items: start;
+  padding: 10px 12px; border-radius: 10px;
+  background: var(--mac-stripe); color: var(--mac-label); text-decoration: none;
+}
+.mac-tile__icon { grid-area: icon; display: grid; place-items: center; width: 24px; height: 24px; margin-bottom: 8px;
+                  border-radius: 50%; background: var(--tint, var(--mac-accent)); color: #fff; }
+.mac-tile__icon svg { width: 14px; height: 14px; }
+.mac-tile__count { grid-area: count; justify-self: end; font: 700 20px/24px var(--mac-font-rounded); font-variant-numeric: tabular-nums; }
+.mac-tile__title { grid-area: title; font: 600 13px/16px var(--mac-font); }
+.mac-tile__subtitle { grid-area: sub; color: var(--mac-label-secondary); font: var(--mac-text-subheadline); }
+
+.mac-sectionhead {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  margin: 18px 0 8px; font: 700 17px/22px var(--mac-font); letter-spacing: -.43px;
+}
+.mac-sectionhead a { color: var(--mac-accent-text); font: var(--mac-text-body); text-decoration: none; }
+
 @media (prefers-reduced-motion: reduce) {
   .mac-switch span, .mac-switch span::after { transition: none; }
 }

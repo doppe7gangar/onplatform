@@ -77,6 +77,9 @@ jobs:
       - name: The live preview
         run: python scripts/eval/test_preview.py
 
+      - name: Each row opens its own record
+        run: python scripts/eval/test_prototype.py
+
       - name: Third-party licences
         run: |
           python scripts/check_licences.py

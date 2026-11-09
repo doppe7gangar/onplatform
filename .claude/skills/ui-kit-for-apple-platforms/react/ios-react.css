@@ -81,3 +81,17 @@
 }
 @keyframes ios-sheet-in { from { transform: translateY(100%); } }
 @keyframes ios-alert-in { from { transform: scale(1.1); opacity: 0; } }
+
+/* A card, hero or tile that is one tap: the link or button laid over it.
+   An action inside the hero stays above it. */
+.ios-cover {
+  position: absolute; inset: 0; z-index: 0;
+  margin: 0; padding: 0; border: 0; border-radius: inherit;
+  background: none; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.ios-cover:active { background: var(--ios-fill-control); }
+.ios-cover:focus-visible { outline: 2px solid var(--ios-accent); outline-offset: 2px; }
+.ios-hero__action, .ios-card .ios-badge { position: relative; z-index: 1; }
+.ios-art__glyph > svg { display: block; width: 100%; height: 100%; }
+.ios-btn-reset { border: 0; background: none; padding: 0 4px; cursor: pointer; }

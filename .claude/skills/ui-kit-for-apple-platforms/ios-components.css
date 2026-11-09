@@ -1570,6 +1570,7 @@ body {
 }
 /* A card with a figure on the left and a chart or ring on the right. */
 .ios-card__split { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.ios-card__split + .ios-progress, .ios-metric + .ios-progress { margin-top: 10px; }
 
 /* ------------------------------------------------------------ Figure
 

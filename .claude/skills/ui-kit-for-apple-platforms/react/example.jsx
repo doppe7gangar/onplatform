@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
-  ActionSheet, Alert, Button, Chip, ControlButton, Controls, EmptyState, Field, LargeTitle,
-  List, NavBar, PageControl, Row, Segmented, Sheet, Slider, Stepper, Switch, TabBar, useCollapsed,
+  ActionSheet, Alert, Badge, Bars, Button, Card, Carousel, Chip, ControlButton, Controls, EmptyState,
+  Field, Hero, LargeTitle, List, Metric, NavBar, PageControl, Progress, Ring, Row, SectionHeader,
+  Segmented, Sheet, Slider, Stats, Stepper, Switch, TabBar, Tile, Tiles, useCollapsed,
 } from "./ios.jsx";
 
 const stroke = { fill: "none", stroke: "currentColor", strokeWidth: 2,
@@ -45,6 +46,40 @@ function App() {
         </Controls>
       } />
       <LargeTitle>Expenses</LargeTitle>
+
+      {/* Content first: the screen opens on what the person came for. */}
+      <div className="ios-inset" style={{ display: "grid", gap: 12, marginBottom: 16 }}>
+        <Hero eyebrow="This month" title="£412 spent" symbol="sterlingsign.circle.fill"
+              glyph={<Icon d={TRAY} />} action="See Budget" onAction={() => note("budget")}
+              onClick={() => note("open month")}>£88 left of £500</Hero>
+        <Card title="Budget" symbol="chart.pie.fill" icon={<Icon d={TRAY} />} meta="Today" tint="orange"
+              onClick={() => note("open budget")}>
+          <div className="ios-card__split">
+            <Metric value="82" unit="%" label="of the month's budget" />
+            <Ring value={0.82} label="82% of the budget spent" tint="orange" />
+          </div>
+          <Progress value={0.82} label="Budget used" tint="orange" />
+        </Card>
+        <Tiles>
+          <Tile title="Food" subtitle="This week" count={12} tint="green" symbol="fork.knife"
+                icon={<Icon d={FORK} />} onClick={() => note("open food")} />
+          <Tile title="Travel" subtitle="This week" count={4} tint="blue" filled symbol="tram.fill"
+                icon={<Icon d={TRAM} />} onClick={() => note("open travel")} />
+        </Tiles>
+        <Card title="Last 7 Days" tint="teal" meta={<Badge tint="red">Over</Badge>}>
+          <Bars values={[0.3, 0.5, 0.2, 0.6, 0.4, 0.7, 0.9]} labels={["M", "T", "W", "T", "F", "S", "S"]}
+                label="Spending each day this week, most today" tint="teal" />
+        </Card>
+        <Stats items={[{ label: "Average", value: "£14" }, { label: "Largest", value: "£42" },
+                       { label: "Count", value: "31" }]} />
+        <SectionHeader title="Accounts" action="See All" onAction={() => note("see all accounts")} />
+        <Carousel label="Accounts">
+          <Hero title="Everyday" eyebrow="£1,240" tint="indigo" glyph={<Icon d={LIST} />}
+                onClick={() => note("open everyday")} />
+          <Hero title="Savings" eyebrow="£6,800" tint="green" glyph={<Icon d={LIST} />}
+                onClick={() => note("open savings")} />
+        </Carousel>
+      </div>
 
       <div className="ios-inset">
         <Segmented label="Period" value={period} onChange={setPeriod}

@@ -1,5 +1,5 @@
 // Types for ios.jsx.
-import type { ButtonHTMLAttributes, HTMLAttributes, InputHTMLAttributes, ReactNode,
+import type { ButtonHTMLAttributes, CSSProperties, HTMLAttributes, InputHTMLAttributes, ReactNode,
               RefObject } from "react";
 
 type Div = HTMLAttributes<HTMLElement>;
@@ -53,3 +53,29 @@ export function ActionSheet(p: { open: boolean; title?: ReactNode; message?: Rea
   actions: ModalAction[]; onClose: () => void }): JSX.Element | null;
 
 export function useModal(open: boolean, onClose: () => void, initial?: string): RefObject<HTMLDivElement>;
+
+// Content first
+type Tint = "accent" | "red" | "orange" | "yellow" | "green" | "mint" | "teal" | "cyan" | "blue"
+  | "indigo" | "purple" | "pink" | "brown" | "gray" | (string & {});
+type Tap = { href?: string; onClick?: () => void };
+type Tinted = { tint?: Tint; className?: string; style?: CSSProperties };
+
+export function Art(p: { symbol?: string; glyph?: ReactNode; src?: string; alt?: string; scrim?: boolean;
+  className?: string }): JSX.Element;
+export function Hero(p: { eyebrow?: ReactNode; title: ReactNode; children?: ReactNode; action?: ReactNode;
+  onAction?: () => void; symbol?: string; glyph?: ReactNode; src?: string; alt?: string } & Tap & Tinted): JSX.Element;
+export function Card(p: { title?: ReactNode; symbol?: string; icon?: ReactNode; meta?: ReactNode;
+  children?: ReactNode } & Tap & Tinted): JSX.Element;
+export function Metric(p: { value: ReactNode; unit?: ReactNode; label?: ReactNode; hero?: boolean;
+  tinted?: boolean; className?: string }): JSX.Element;
+export function Ring(p: { value: number; label: string; large?: boolean } & Tinted): JSX.Element;
+export function Bars(p: { values: number[]; current?: number; labels?: ReactNode[]; label: string } & Tinted): JSX.Element;
+export function Progress(p: { value: number; label: string } & Tinted): JSX.Element;
+export function Badge(p: { children: ReactNode } & Tinted): JSX.Element;
+export function Stats(p: { items: { label: ReactNode; value: ReactNode }[]; className?: string }): JSX.Element;
+export function Tiles(p: { children: ReactNode; className?: string }): JSX.Element;
+export function Tile(p: { title: ReactNode; subtitle?: ReactNode; count?: ReactNode; symbol?: string;
+  icon?: ReactNode; filled?: boolean } & Tap & Tinted): JSX.Element;
+export function Carousel(p: { label: string; children: ReactNode; className?: string }): JSX.Element;
+export function SectionHeader(p: { title: ReactNode; action?: ReactNode; href?: string;
+  onAction?: () => void; className?: string }): JSX.Element;

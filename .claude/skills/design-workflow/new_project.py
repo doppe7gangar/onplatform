@@ -749,6 +749,15 @@ IPAD_CSS = """
              font: var(--ios-text-title3); }
   .ipad-tabbar__item[aria-selected="true"] { color: var(--accent-text-safe); }
   .ipad-sidebar__icon { color: var(--accent-text-safe); }
+  /* The summary across the top: the hero beside two cards, stacked when
+     the window narrows. */
+  .ipad-summary { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+                  gap: 16px; margin-bottom: 4px; }
+  .ipad-summary > .ios-hero { grid-row: span 2; min-height: 280px; }
+  .ipad-summary > .ios-card + .ios-card { margin-top: 0; }
+  @media (max-width: 760px) { .ipad-summary { grid-template-columns: 1fr; }
+                              .ipad-summary > .ios-hero { grid-row: auto; } }
+  .ipad-body .ios-sectionhead { margin-left: 0; }
 """
 
 IPAD_SCROLL_JS = """
@@ -771,6 +780,30 @@ IPAD_STATUSBAR = """    <div class="ipad-statusbar" aria-hidden="true">
     </div>"""
 
 IPAD_STATES = """          <section class="state state--populated">
+          <!-- Content first, as on iPhone: the hero and the figures the
+               person checks, then the list. Replace with the product's own. -->
+          <div class="ipad-summary">
+            <a class="ios-hero" href="#">
+              <div class="ios-art ios-art--scrim">__HEROGLYPH__</div>
+              <p class="ios-hero__eyebrow">Up next</p>
+              <h2 class="ios-hero__title">Sheet-pan chicken</h2>
+              <p class="ios-hero__body">35 minutes · ready by 7:15</p>
+              <span class="ios-btn ios-btn--filled ios-hero__action">Start Cooking</span>
+            </a>
+            <a class="ios-card" href="#">
+              <div class="ios-card__head">__CARDGLYPH__This Week<span class="ios-card__meta">Updated now</span></div>
+              <div class="ios-card__split">
+                <div class="ios-metric"><span class="ios-metric__value">5<span class="ios-metric__unit">of 7</span></span><span class="ios-metric__label">dinners cooked at home</span></div>
+                <svg class="ios-ring" viewBox="0 0 40 40" role="img" aria-label="5 of 7 dinners cooked at home"><circle class="ios-ring__track" cx="20" cy="20" r="16"/><circle class="ios-ring__value" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="71 100"/></svg>
+              </div>
+            </a>
+            <a class="ios-card" href="#">
+              <div class="ios-card__head">__CARDGLYPH__Cooking Time<span class="ios-card__meta">Avg 24 min</span></div>
+              <div class="ios-bars" role="img" aria-label="Minutes cooked each day this week"><span style="--v:.4"></span><span style="--v:.7"></span><span style="--v:.3"></span><span style="--v:.5"></span><span style="--v:.6"></span><span style="--v:.2"></span><span style="--v:.8" aria-current="true"></span></div>
+              <div class="ios-bars__labels"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+            </a>
+          </div>
+          <h2 class="ios-sectionhead">Today</h2>
             <ul class="ios-list">
 __ROWS__
             </ul>
@@ -887,6 +920,8 @@ def ipad_compose(model, name, screens, thing):
             .replace("__EMPTY_CTA__", empty_cta)
             .replace("__NAME__", name)
             .replace("__THING__", thing))
+    body = (body.replace("__HEROGLYPH__", ios_svg("fork.knife", FORK_GLYPH, 0, 1.3, "ios-art__glyph"))
+            .replace("__CARDGLYPH__", ios_svg("calendar", CALENDAR_GLYPH, 17, 2)))
     for key, glyph in list(IPAD_GLYPHS.items()) + list(MAC_GLYPHS.items()):
         size = 15 if key in ("__WIFI__", "__BATTERY__") else 20
         body = body.replace(key, mac_svg(glyph, size, 1.7))
@@ -1197,6 +1232,27 @@ __SIDEBAR__
       </header>
       <main class="mac-content">
         <section class="state state--populated">
+          <div class="mac-summary">
+            <a class="mac-hero" href="#">
+              <div class="mac-art mac-art--scrim">__HEROGLYPH__</div>
+              <p class="mac-hero__eyebrow">Up next</p>
+              <h2 class="mac-hero__title">Sheet-pan chicken</h2>
+              <p class="mac-hero__body">35 minutes · ready by 7:15</p>
+              <span class="mac-btn mac-hero__action">Start Cooking</span>
+            </a>
+            <a class="mac-card" href="#">
+              <div class="mac-card__head">__CARDGLYPH__This Week<span class="mac-card__meta">Updated now</span></div>
+              <div class="mac-card__split">
+                <div class="mac-metric"><span class="mac-metric__value">5<span class="mac-metric__unit">of 7</span></span><span class="mac-metric__label">dinners cooked at home</span></div>
+                <svg class="mac-ring" viewBox="0 0 40 40" role="img" aria-label="5 of 7 dinners cooked at home"><circle class="mac-ring__track" cx="20" cy="20" r="16"/><circle class="mac-ring__value" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="71 100"/></svg>
+              </div>
+            </a>
+            <a class="mac-card" href="#">
+              <div class="mac-card__head">__CARDGLYPH__Cooking Time<span class="mac-card__meta">Avg 24 min</span></div>
+              <div class="mac-bars" role="img" aria-label="Minutes cooked each day this week"><span style="--v:.4"></span><span style="--v:.7"></span><span style="--v:.3"></span><span style="--v:.5"></span><span style="--v:.6"></span><span style="--v:.2"></span><span style="--v:.8" aria-current="true"></span></div>
+            </a>
+          </div>
+          <h2 class="mac-sectionhead">All __THING__</h2>
           <table class="mac-table">
             <thead><tr><th>Name</th><th>Time</th><th>Serves</th><th>Modified</th></tr></thead>
             <tbody>
@@ -1440,6 +1496,8 @@ def compose(kind, model, name, screens, thing):
                 .replace("__ROWS__", mac_rows(thing))
                 .replace("__SKELROWS__", mac_skel_rows())
                 .replace("__SINGULAR__", thing.rstrip("s")))
+        body = (body.replace("__HEROGLYPH__", ios_svg("fork.knife", FORK_GLYPH, 0, 1.3, "mac-art__glyph"))
+                .replace("__CARDGLYPH__", ios_svg("calendar", CALENDAR_GLYPH, 14, 2)))
         for key, glyph in MAC_GLYPHS.items():
             size = 44 if key in ("__TRAY__", "__WARN__") else 18
             body = body.replace(key, mac_svg(glyph, size, 1.4 if size == 44 else 1.7))

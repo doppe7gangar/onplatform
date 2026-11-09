@@ -122,6 +122,34 @@ def run_checks(url, save):
                   all(page.query_selector(s) for s in (".ios-navbar", ".ios-segmented",
                       ".ios-switch", ".ios-stepper", ".ios-slider", ".ios-tabbar", ".ios-chip")))
 
+            # Content first: whole cards are one tap, named by their title;
+            # figures are images a screen reader can name.
+            check("content parts rendered",
+                  all(page.query_selector(s) for s in (".ios-hero", ".ios-card", ".ios-ring", ".ios-bars",
+                      ".ios-tile", ".ios-stats", ".ios-carousel", ".ios-sectionhead", ".ios-progress")))
+            card = page.get_by_role("button", name="Budget", exact=True)
+            check("a tappable card is a button named by its title", card.count() == 1)
+            card.focus()
+            page.keyboard.press("Enter")
+            check("Enter on a focused card opens it", "open budget" in log(), log())
+            tile = page.get_by_role("button", name="Food, 12")
+            check("a tile is a button named by its title and count", tile.count() == 1)
+            page.get_by_role("button", name="See Budget").click()
+            check("the hero's own action is reachable above its cover",
+                  "budget" in log().split("|")[-1] and "open month" not in log(), log())
+            check("a ring is an image with its value in words",
+                  page.get_by_role("img", name="82% of the budget spent").count() == 1)
+            check("progress reports its value",
+                  page.get_by_role("progressbar", name="Budget used").get_attribute("aria-valuenow") == "82")
+            cols = page.evaluate("[...document.querySelectorAll('.ios-tile')].map(e => Math.round(e.getBoundingClientRect().left))")
+            check("tiles sit two across", len(set(cols)) == 2, cols)
+            tint = page.evaluate("getComputedStyle(document.querySelector('.ios-card.ios-tint-orange .ios-ring__value')).stroke")
+            orange = page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--ios-orange').trim()")
+            check("a card's tint reaches the ring inside it",
+                  tint == "rgb(%d, %d, %d)" % tuple(int(orange[i:i + 2], 16) for i in (1, 3, 5)), (tint, orange))
+            check("the carousel can be reached and scrolled from the keyboard",
+                  page.get_by_role("region", name="Accounts").get_attribute("tabindex") == "0")
+
             # Rows: a real button, named "title, value", from the keyboard.
             row = page.get_by_role("button", name="Lunch at Kiln, £18.40")
             check("a tappable row is a button named by its title and value", row.count() == 1)

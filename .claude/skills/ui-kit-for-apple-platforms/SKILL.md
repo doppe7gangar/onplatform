@@ -205,6 +205,15 @@ The Mac kit's verifier, `python3 verify_mac_ui.py`, measures
 `mac-example.html` against all of this in 87 checks. For a whole Mac app, design-workflow's
 `new_project.py --kind macos` scaffolds the window.
 
+**Content first on the Mac.** `macos-components.css` has the same
+content parts at Mac sizes -- `mac-hero` with `mac-art`, `mac-card`,
+`mac-metric`, `mac-ring`, `mac-bars`, `mac-badge`, `mac-stats`,
+`mac-tiles`, `mac-sectionhead`, and `mac-summary` to set a hero beside
+two cards -- for an app about its content (Music, Weather, Home) rather
+than about managing files. They take `--tint` and the `mac-tint-*`
+classes the same way. On iPad, use the iOS parts: `ipados-components.css`
+loads with `ios-components.css`.
+
 ## iPadOS
 
 An iPad app is not a big iPhone. `ipados-components.css` carries the
@@ -324,6 +333,23 @@ import { NavBar, LargeTitle, List, Row, Switch, Sheet, useCollapsed } from "./io
   <Row title="Daily nudge" accessory={<Switch checked={on} onChange={setOn} />} />
   <Row title="Account" value="Signed in" onClick={openAccount} />
 </List>
+```
+
+The content-first parts are components too: `Hero`, `Card`, `Metric`,
+`Ring`, `Bars`, `Progress`, `Badge`, `Stats`, `Tiles` and `Tile`,
+`Carousel`, `SectionHeader` and `Art`. A card, hero or tile given
+`onClick` or `href` is one tap, a real button or link named by its
+title; `tint="orange"` (or any CSS colour) colours it and what's inside.
+
+```jsx
+<Hero eyebrow="Up next" title="Water the Calathea" glyph={<LeafIcon />}
+      action="Water Now" onAction={water}>Due this morning</Hero>
+<Card title="This Week" tint="green" onClick={openWeek}>
+  <div className="ios-card__split">
+    <Metric value="5" unit="of 7" label="watered on the day" />
+    <Ring value={0.71} label="5 of 7 on time" />
+  </div>
+</Card>
 ```
 
 Pass `symbol="fork.knife"` wherever an icon goes: the drawing is your

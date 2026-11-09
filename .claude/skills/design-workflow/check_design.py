@@ -479,7 +479,8 @@ def check_uses_kit(path, html):
 # "Content first"), and the plain image or chart a design may draw itself.
 CONTENT_PARTS = ("ios-hero", "ios-headerhero", "ios-card", "ios-tile", "ios-ring",
                  "ios-bars", "ios-art", "ios-carousel", "ios-stats", "ios-metric",
-                 "ios-progress")
+                 "ios-progress", "mac-hero", "mac-card", "mac-tile", "mac-ring",
+                 "mac-bars", "mac-art", "mac-stats", "mac-metric")
 _CONTENT = re.compile(r'class="[^"]*\b(?:' + "|".join(CONTENT_PARTS) + r')\b'
                       r'|<img\b[^>]*\bsrc="[^"]+"|<picture\b|<canvas\b|<video\b'
                       r'|<svg\b[^>]*\brole="img"')
@@ -497,9 +498,17 @@ def check_content_first(path, html):
     is warned, since a mail or notes app can rightly open on a list.
     """
     name = os.path.basename(path)
-    if not re.search(r'class="[^"]*\bios-statusbar\b', html) or is_ipad(path, html):
+    mac = is_mac(path, html)
+    if not (re.search(r'class="[^"]*\bios-statusbar\b', html) or is_ipad(path, html) or mac):
         return
     body = body_of(html)
+    if mac and not _CONTENT.search(body):
+        # Finder, Mail and Notes are rightly tables and lists; a Mac app
+        # that is about its content still wants to open on it.
+        warn(f"{name}: the window is tables and lists alone. If the app is about its "
+             f"content rather than managing files, open on it the way Music and Weather "
+             f"do: macos-components.css \"Content first\" has the parts at Mac sizes.")
+        return
     if not _CONTENT.search(body):
         bad(f"{name}: every screen is lists -- no hero, card, figure, chart, tile or "
             f"picture anywhere -- so it reads as a Settings pane, not an app. Open "
@@ -516,6 +525,49 @@ def check_content_first(path, html):
              f"(ios-components.css \"Content first\") and keep the list below it.")
         return
     ok(f"{name}: opens on content, not on a list")
+
+
+def check_prototype_data(path, html):
+    """Rows that open a detail open their own record, and the records exist.
+
+    A list pushes one detail screen; with nothing to tell the rows apart
+    every row opened the same plant, which is the second thing a reviewer
+    taps. prototype.js fills the screen from data-item; this holds the
+    references to the data block and points at rows that have none.
+    """
+    import json
+    name = os.path.basename(path)
+    m = re.search(r'<script[^>]*\bid="prototype-data"[^>]*>(.*?)</script>', html, re.S)
+    data = None
+    if m:
+        try:
+            data = json.loads(m.group(1))
+        except ValueError as e:
+            bad(f"{name}: the prototype-data block is not valid JSON ({str(e)[:60]}); "
+                f"no row can open its own record.")
+            return
+    missing = []
+    for ref in re.findall(r'\bdata-item="([^"{][^"]*)"', html):
+        node = data
+        for k in ref.strip().split("."):
+            node = node.get(k) if isinstance(node, dict) else None
+        if node is None:
+            missing.append(ref)
+    if missing:
+        bad(f"{name}: {len(missing)} data-item reference(s) name a record that isn't in "
+            f"prototype-data: {', '.join(sorted(set(missing))[:4])}.")
+    pushes = {}
+    for tag in re.findall(r"<[a-z][^>]*\bdata-push=\"[^\"]+\"[^>]*>", html):
+        target = re.search(r'data-push="([^"]+)"', tag).group(1)
+        pushes.setdefault(target, []).append("data-item=" in tag)
+    for target, items in pushes.items():
+        if len(items) >= 3 and not any(items):
+            warn(f"{name}: {len(items)} controls open '{target}' and every one shows the "
+                 f"same content. Give each its record -- data-item on the row, data-field "
+                 f"in the screen, the records in a prototype-data block (prototype.js) -- "
+                 f"so a tapped row opens that row.")
+    if data is not None and not missing:
+        ok(f"{name}: every data-item names a record in prototype-data")
 
 
 def check_icons_named(path, html):
@@ -849,8 +901,16 @@ function pictureUnder(e) {
   const x = tb[0] + tb[2] / 2, y = tb[1] + tb[3] / 2;
   if (x < 0 || y < 0 || x >= innerWidth || y >= innerHeight) return false;
   for (const n of document.elementsFromPoint(x, y)) {
-    if (n === e || e.contains(n)) continue;
+    if (n !== e && e.contains(n)) continue;
     const cs = getComputedStyle(n);
+    if (n === e) {
+      // The words' own element first: a white button on a picture is
+      // read against the button, not the picture.
+      const own = parseColor(cs.backgroundColor);
+      if (own && own[3] >= 0.999) return false;
+      if (/url\(/.test(cs.backgroundImage || '')) return true;
+      continue;
+    }
     if (/^(IMG|VIDEO|CANVAS|PICTURE)$/.test(n.tagName)) return true;
     // A photo is a picture wherever it is. A gradient is one only when
     // it is painted as a layer of its own behind the words (art, a
@@ -1114,21 +1174,21 @@ def picture_contrast(b, pg, runs):
     return low
 
 
-def check_brand_presence(b, url, name, brand):
+def check_brand_presence(b, url, name, brand, width=390):
     """The brand colour has to be on the screen, not only in theme.css.
 
     Every check could pass with the accent bridged correctly and the
     brand still nowhere to be seen: a design that coloured its symbols
     with the system blue, kept the accent for a single "+" and built
     the rest in grey shipped a green brand as a blue app. Measured on
-    the first screen as rendered, light, at phone width.
+    the first screen as rendered, light, at the platform's first width.
     """
     if not brand or not re.fullmatch(r"#[0-9A-Fa-f]{6}", brand):
         return
     hue, sat = hue_of(brand)
     if sat < 0.25:
         return  # a grey or near-black brand is carried by type, not colour
-    pg = b.new_page(viewport={"width": 390, "height": 844}, color_scheme="light")
+    pg = b.new_page(viewport={"width": width, "height": 844 if width < 600 else 900}, color_scheme="light")
     try:
         pg.goto(url + "?state=populated", wait_until="load")
         pg.wait_for_timeout(250)
@@ -1176,7 +1236,11 @@ def check_browser(path, brand):
     floor = 48 if android else 20 if mac else 28
     # An iPad layout is looked at as an iPad: the iPad Air's landscape
     # width, where the frame drops away, and wide enough to show it.
-    widths = (1180, 1400) if is_ipad(path, page) else (390, 430, 1280)
+    # A Mac window is looked at on a desktop: at a phone's width its
+    # sidebar leaves the content a sliver, and every finding is about
+    # that sliver rather than the design.
+    widths = ((1180, 1400) if is_ipad(path, page) else (1280, 1440) if mac
+              else (390, 430, 1280))
 
     def sample(b, scheme, more):
         """Failing text runs for one appearance, optionally under IC."""
@@ -1225,9 +1289,9 @@ def check_browser(path, brand):
             warn(f"could not launch a browser ({str(e)[:70]}); skipped "
                  f"the browser pass. Run `playwright install chromium`.")
             return
-        if not mac and not is_ipad(path, page):
+        if True:
             try:
-                check_brand_presence(b, url, name, brand)
+                check_brand_presence(b, url, name, brand, 1280 if mac else widths[0])
             except Exception as e:  # a measurement, never a crash
                 warn(f"{name}: couldn't measure the brand colour ({str(e)[:60]})")
         for scheme in ("light", "dark"):
@@ -1312,7 +1376,10 @@ def check_browser(path, brand):
                     # treatment of their own. Warned rather than failed:
                     # a canvas, an inspector and a dialog legitimately
                     # differ, so this is a smell to answer, not a defect.
-                    treats = d.get("treatments") or []
+                    # An iOS heuristic: a Mac window has a sidebar, a
+                    # toolbar, a table and its selection, all rightly
+                    # different surfaces.
+                    treats = [] if mac else (d.get("treatments") or [])
                     oneoffs = [t for t in treats if t["n"] <= 2]
                     if len(treats) >= 6 and len(oneoffs) >= 3:
                         listed = ", ".join(
@@ -1488,6 +1555,7 @@ def main():
         check_token_overrides(p, html)
         check_uses_kit(p, html)
         check_content_first(p, html)
+        check_prototype_data(p, html)
         if is_android(p, html):
             check_icons_named(p, html)
         else:
