@@ -20,8 +20,19 @@ Sizes, from Apple's App Store Connect "Screenshot specifications"
 
 Apple scales the required size down for the smaller displays, takes .png or
 .jpeg, up to 10 per size, and no alpha channel; every file written here is
-checked for all three. Google Play's limits are not built in: pass --size
-from Play Console's current requirements.
+checked for all three.
+
+For Google Play, the sizes commonly recommended for each form factor
+(collected by StackOverflow, LaunchShots and MobileAction rather than read
+from Google's own page; Play Console's requirements are what count):
+
+  android                      1080 x 1920  phone, portrait (the default)
+  android-landscape            1920 x 1080  phone, landscape
+  android-tablet-7             1200 x 1920  7-inch tablet, portrait
+  android-tablet-10            1600 x 2560  10-inch tablet, portrait
+  android-tablet-10-landscape  2560 x 1800  10-inch tablet, landscape
+
+Any other size: --size WxH@scale.
 
 What each screenshot shows comes from store.json in the design folder:
 
@@ -62,8 +73,14 @@ SIZES = {
     "ipad": ("iPad 13-inch display, landscape", 2752, 2064, 2),
     "ipad-portrait": ("iPad 13-inch display, portrait", 2064, 2752, 2),
     "mac": ("Mac, 16:10", 2880, 1800, 2),
+    # Google Play: commonly recommended, not from Google's own page.
+    "android": ("Android phone, portrait", 1080, 1920, 3),
+    "android-landscape": ("Android phone, landscape", 1920, 1080, 3),
+    "android-tablet-7": ("Android 7-inch tablet, portrait", 1200, 1920, 2),
+    "android-tablet-10": ("Android 10-inch tablet, portrait", 1600, 2560, 2),
+    "android-tablet-10-landscape": ("Android 10-inch tablet, landscape", 2560, 1800, 2),
 }
-DEFAULTS = {"iphone": ["iphone", "iphone-large"], "ipad": ["ipad"], "mac": ["mac"], "android": []}
+DEFAULTS = {"iphone": ["iphone", "iphone-large"], "ipad": ["ipad"], "mac": ["mac"], "android": ["android"]}
 MAX_PER_SIZE = 10
 
 # The design without its review chrome, its screen filling the frame.
@@ -75,6 +92,8 @@ BARE_CSS = """
 .ipad { width: 100vw !important; height: 100vh !important; border: 0 !important; border-radius: 0 !important;
         box-shadow: none !important; }
 .mac-desktop { min-height: 100vh !important; }
+.m3-stage { padding: 0 !important; gap: 0 !important; }
+.m3-device { width: 100vw !important; height: 100vh !important; border: 0 !important; border-radius: 0 !important; }
 """
 
 COMPOSE = """<!doctype html><meta charset="utf-8">
@@ -332,8 +351,11 @@ def main():
     if unknown:
         sys.exit(f"unknown size {', '.join(unknown)}; known: {', '.join(SIZES)}, or --size WxH@scale")
     if not sizes:
-        sys.exit("an Android design has no built-in size: Google Play's limits aren't built in. "
-                 "Pass --size from Play Console's current requirements, e.g. --size 1080x1920@3.")
+        sys.exit("no sizes: name them with --sizes or --size WxH@scale")
+    if plat == "android" and any(k.startswith("android-tablet") for k in sizes) and "m3-navrail" not in html:
+        print("  note a tablet size for a phone layout: Play shows tablet screenshots to tablet users, and a phone "
+              "screen stretched across one reads as exactly that. Lay the design out for a tablet first "
+              "(a navigation rail, two panes).")
     out = os.path.abspath(a.out or os.path.join(os.path.dirname(root), "store-screenshots"))
     try:
         plat, written, fresh = run(root, sizes, a.plain, out)

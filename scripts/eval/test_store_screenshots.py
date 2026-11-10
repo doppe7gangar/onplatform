@@ -4,8 +4,8 @@
 For an iPhone, iPad and Mac starter: every file has to be exactly the
 size Apple's screenshot specifications list for that display and carry
 no alpha channel; without store.json a starter one is written; --plain
-and a custom --size work; an Android design without --size is refused
-with the reason; and the PNG writer works without Pillow. The design
+and a custom --size work; an Android design gets the Google Play sizes;
+and the PNG writer works without Pillow. The design
 folder still passes the publish audit with store.json in it.
 """
 
@@ -79,9 +79,12 @@ def main():
         c(p.returncode != 0 and "unknown size" in p.stderr, "an unknown size is refused", p.stderr)
 
         a = scaffold(tmp, "android", "tabs")
-        p = subprocess.run([sys.executable, TOOL, a], capture_output=True, text=True)
-        c(p.returncode != 0 and "Google Play" in p.stderr and "--size" in p.stderr,
-          "an Android design without --size is refused, with why", p.stderr)
+        p = subprocess.run([sys.executable, TOOL, a, "--sizes", "android,android-tablet-10-landscape"],
+                           capture_output=True, text=True)
+        got = {k: {info(f)[:2] for f in pngs(os.path.join(os.path.dirname(a), "store-screenshots", k))}
+               for k in ("android", "android-tablet-10-landscape")}
+        c(p.returncode == 0 and got == {"android": {(1080, 1920)}, "android-tablet-10-landscape": {(2560, 1800)}},
+          "Android: the phone's 1080 x 1920 and a tablet's 2560 x 1800", (got, p.stdout + p.stderr))
 
         p = subprocess.run([sys.executable, os.path.join(DESIGN, "check_distribution.py"), d, "--purpose", "publish"],
                            capture_output=True, text=True)

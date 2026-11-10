@@ -1,6 +1,6 @@
 ---
-description: Make App Store screenshots from a design, at the sizes Apple's screenshot specifications list, captioned on the brand colour or bare, and checked for size and alpha.
-argument-hint: "[design folder] [--plain] [--sizes iphone,iphone-large,ipad,mac]"
+description: Make App Store and Google Play screenshots from a design, at the stores' sizes, captioned on the brand colour or bare, and checked for size and alpha.
+argument-hint: "[design folder] [--plain] [--sizes iphone,iphone-large,ipad,mac,android]"
 disable-model-invocation: true
 ---
 
@@ -25,8 +25,12 @@ Scripts live in `${CLAUDE_PLUGIN_ROOT}/.claude/skills/design-workflow/`; below, 
    channel, which Apple refuses.
 3. Open each screenshot and look at it: the caption has to fit in two
    lines, and the screen under it has to show what the caption says.
-4. For Google Play, ask for the sizes from Play Console's current
-   requirements and pass each as `--size WxH@scale`; they aren't built in.
+4. An Android design gets Google Play's phone size, 1080 x 1920. Add
+   `--sizes android-tablet-7,android-tablet-10` for tablets, or `--size
+   WxH@scale` for any other. These are the commonly recommended sizes, not
+   read from Google's own page, so check them against Play Console. A tablet
+   size wants a tablet layout: a phone screen stretched across one reads as
+   exactly that.
 
 Report the files and their sizes, and that the captions are the person's to
 approve.
