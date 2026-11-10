@@ -83,6 +83,9 @@ jobs:
       - name: Largest text, right to left, long text
         run: python scripts/eval/test_stress.py
 
+      - name: App Store screenshots
+        run: python scripts/eval/test_store_screenshots.py
+
       - name: Third-party licences
         run: |
           python scripts/check_licences.py

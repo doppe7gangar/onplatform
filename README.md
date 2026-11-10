@@ -162,6 +162,7 @@ what you ask; the commands are for when you know which step you want.
 | `/onplatform:figma [folder]` | Every screen and state into Figma, light and dark |
 | `/onplatform:handoff [design] [app]` | The design into SwiftUI, checked for anything lost on the way |
 | `/onplatform:preview [folder]` | A live preview of a design that reloads itself as it changes; `--phone` to open it on a phone on the same network |
+| `/onplatform:store [folder]` | App Store screenshots at Apple's sizes, captioned on the brand colour or bare, checked for size and alpha |
 | `/onplatform:ship [folder]` | Ready to publish: it won't call a design ready while it carries SF Pro, SF Symbols or a file without its licence |
 
 **A designer to talk to.** Start a whole session as the plugin's designer,
