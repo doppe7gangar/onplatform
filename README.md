@@ -157,7 +157,7 @@ what you ask; the commands are for when you know which step you want.
 |---|---|
 | `/onplatform:design <what you want>` | A brief to a working, checked prototype: settle the screens, scaffold, build, check in a browser, render and review |
 | `/onplatform:check [folder]` | Every mechanical check on a design (taps, states, contrast, use of the kit, licences, the largest text, right to left, long text), fixed until it passes |
-| `/onplatform:review [files]` | A review of SwiftUI, UIKit, AppKit or a design against the HIG: violations, guidance and judgment, each linked to Apple's page |
+| `/onplatform:review [files]` | A review of SwiftUI, UIKit or AppKit against the HIG, Compose or Android layouts against Material 3, or a design against its platform: violations, guidance and judgment, each linked to its page |
 | `/onplatform:ask <question>` | The answer from Apple's page itself, with the link, each figure's platform, and quotes checked word for word |
 | `/onplatform:figma [folder]` | Every screen and state into Figma, light and dark |
 | `/onplatform:handoff [design] [app]` | The design into SwiftUI, checked for anything lost on the way |
@@ -182,13 +182,18 @@ text, has the design critic review it and fixes what comes back, at most
 twice, then hands it over. In an ordinary session, Claude hands design
 work to it on its own, or ask for it: `@agent-onplatform:designer`.
 
-Two more agents take the reading-heavy work into their own context, so your
+Three more agents take the reading-heavy work into their own context, so your
 conversation stays on the design. Claude hands work to them when it fits,
 or ask for one by name, e.g. `@agent-onplatform:reviewer look at SettingsView.swift`:
 
 - **`onplatform:reviewer`** reviews code or a design against the HIG, reading
   Apple's pages, and returns findings sorted into violations, guidance and
   judgment. It doesn't edit anything.
+- **`onplatform:android-reviewer`** does the same for Android: Jetpack Compose,
+  Android XML layouts or an Android design, held against the sizes, colour
+  roles and type measured from Google's Material 3 Design Kit, with Material
+  Symbols names checked and Apple chrome flagged. It doesn't edit anything
+  either.
 - **`onplatform:design-critic`** renders a design, holds each screen against the
   platform's own example screens, and ranks what most gives it away as not
   native.

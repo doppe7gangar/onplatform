@@ -47,6 +47,7 @@ FORBIDDEN = [
 # comes from; add a file there and here together.
 ALLOWED = [
     re.compile(r"^docs/(iphone|ipad|mac|android)\.png$"),          # our own renders
+    re.compile(r"^\.claude-plugin/icon\.png$"),                       # our own drawing
     re.compile(r"^\.claude/skills/ui-kit-for-apple-platforms/fonts/InterVariable(-Italic)?\.woff2$"),  # SIL OFL
     re.compile(r"^\.claude/skills/ui-kit-for-android/fonts/roboto-[a-z-]+\.woff2$"),         # SIL OFL
 ]
