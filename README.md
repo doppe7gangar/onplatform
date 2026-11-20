@@ -156,6 +156,7 @@ what you ask; the commands are for when you know which step you want.
 
 | Command | What it does |
 |---|---|
+| `/onplatform:start` | Start here: what it does, three things to try, and whether setup is done |
 | `/onplatform:design <what you want>` | A brief to a working, checked prototype: settle the screens, scaffold, build, check in a browser, render and review |
 | `/onplatform:check [folder]` | Every mechanical check on a design (taps, states, contrast, use of the kit, licences, the largest text, right to left, long text), fixed until it passes |
 | `/onplatform:review [files]` | A review of SwiftUI, UIKit or AppKit against the HIG, Compose or Android layouts against Material 3, or a design against its platform: violations, guidance and judgment, each linked to its page |
@@ -200,9 +201,6 @@ or ask for one by name, e.g. `@agent-onplatform:reviewer look at SettingsView.sw
   platform's own example screens, and ranks what most gives it away as not
   native.
 
-When a session starts, one line says onplatform is on and where its
-commands and agents are.
-
 Two checks run by themselves:
 
 - **After Claude writes or edits a `.swift` file**, `check_swiftui.py` runs
@@ -212,7 +210,7 @@ Two checks run by themselves:
   checked, and the command is stopped if SF Pro, SF Symbols or Apple's
   images would go along with it.
 
-To turn one off, set `ONPLATFORM_SWIFTUI_HOOK`, `ONPLATFORM_COMPOSE_HOOK`, `ONPLATFORM_COMMIT_GUARD` or `ONPLATFORM_BANNER` to `off`
+To turn one off, set `ONPLATFORM_SWIFTUI_HOOK`, `ONPLATFORM_COMPOSE_HOOK` `ONPLATFORM_COMMIT_GUARD` to `off`
 in the `env` of `~/.claude/settings.json`.
 
 ### In your own CI

@@ -35,13 +35,38 @@ compound command asks again every time.
    official address yourself works too. That is the only source for what Apple says: model
    memory of the HIG goes stale every OS release, and a remembered rule
    sounds exactly as confident as a real one.
-3. **Answer with the link.** Prefer your own words plus the link. When the
+3. **Answer with the link,** in the shape below. Prefer your own words plus the link. When the
    exact wording matters, quote a short passage copied from the page you
    just read, character for character.
 4. **If the page can't be fetched**, say so. Answer from `numbers.md`,
    `concepts.md` and `patterns.md`, label anything else as your
    understanding rather than Apple's statement, and give the link to
    check.
+
+## The answer's shape
+
+A question gets an answer someone can act on at a glance, not an essay.
+Use this shape, and nothing around it:
+
+```
+**Too small.** 30 × 30 pt is under the 44 × 44 pt hit region Apple sets for iPhone.
+
+> "(the one sentence that settles it, copied from the page)" — [Buttons](https://developer.apple.com/design/human-interface-guidelines/buttons)
+
+**Fix:** keep the 30 pt glyph and grow what's tappable.
+    (the code: six lines at most)
+
+iPadOS: same · visionOS: 60 × 60 pt · [Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility)
+```
+
+- **The verdict first**, in bold, two to four words ("Too small.", "Use a sheet.", "Fine as is."), then one sentence with the number and its platform.
+- **One quote at most**, fifteen words or fewer (cut the rest with …), copied from the page you just read, with its link.
+- **The fix**, if there is one: one line, then code only if it's shorter than the explanation would be.
+- **One footer line** for other platforms and further pages, separated by ` · `.
+- Nothing between the fix and the footer: a caveat goes in the verdict, a further page goes in the footer.
+- About ten lines in all. No headings, no "two things worth checking", no closing offer. If it truly depends on something you can't see, say which way it goes in the verdict ("Too small, if that's the tap area.") rather than adding a section.
+
+Reviews keep their own shape (violations, guidance, judgment); this is for questions.
 
 ## Writing new UI
 

@@ -16,6 +16,14 @@ movement is actually built lives outside it, which is why this exists.
 | `references/microinteractions-feedback.md` | Press states, loading, success and error feedback, haptic pairing. |
 | `references/gestures-interaction.md` | Swipe, drag, pinch, edge gestures and how motion should track them. |
 
+
+## The answer's shape
+
+Answer a motion question the way a designer would at a desk: the verdict
+in bold first ("Use `.snappy`.", "Too bouncy."), one sentence on why, the
+code in six lines or fewer, and one footer line for Reduce Motion and
+the other platforms, separated by ` · `. About ten lines; no headings, no
+closing offer.
 ## Where each thing comes from
 
 Worth being blunt about, because the three sources have very different

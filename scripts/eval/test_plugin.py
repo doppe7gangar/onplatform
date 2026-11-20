@@ -190,15 +190,12 @@ def main():
     expect("ONPLATFORM_COMPOSE_HOOK=off turns it off", rc == 0 and out == "", out)
     shutil.rmtree(data, ignore_errors=True)
 
-    print("startup line:")
-    rc, out = hook("session_start.py", {"source": "startup"})
-    msg = json.loads(out).get("systemMessage", "") if out else ""
-    expect("a fresh start shows one line with the real counts",
-           rc == 0 and msg.startswith("onplatform ready · 5 skills") and "/onplatform:" in msg, out)
-    expect("it points to /onplatform:setup until that's done", "/onplatform:setup" in msg, msg)
+    print("setup:")
     home = tempfile.mkdtemp(prefix="onp-home-")
     allow = os.path.join(ROOT, "skills", "setup", "allow.py")
     env = dict(os.environ, HOME=home, CLAUDE_PLUGIN_ROOT=ROOT)
+    p = subprocess.run([sys.executable, allow, "--check"], capture_output=True, text=True, env=env)
+    expect("--check says not yet set up on a fresh home", p.returncode == 1, p.stdout)
     p = subprocess.run([sys.executable, allow, "--apply"], capture_output=True, text=True, env=env)
     rules = json.load(open(os.path.join(home, ".claude", "settings.json")))["permissions"]["allow"]
     expect("/onplatform:setup adds just a Read rule and a python3 rule for the plugin",
@@ -207,14 +204,9 @@ def main():
     p2 = subprocess.run([sys.executable, allow, "--apply"], capture_output=True, text=True, env=env)
     again = json.load(open(os.path.join(home, ".claude", "settings.json")))["permissions"]["allow"]
     expect("running it twice adds nothing", "Already set up" in p2.stdout and again == rules, p2.stdout)
-    rc, out = hook("session_start.py", {"source": "startup"}, {"HOME": home})
-    msg = json.loads(out).get("systemMessage", "") if out else ""
-    expect("once set up, the line stops pointing to it", msg and "/onplatform:setup" not in msg, msg)
+    p = subprocess.run([sys.executable, allow, "--check"], capture_output=True, text=True, env=env)
+    expect("--check says set up afterwards", p.returncode == 0, p.stdout)
     shutil.rmtree(home, ignore_errors=True)
-    rc, out = hook("session_start.py", {"source": "clear"})
-    expect("/clear, resume and compaction stay quiet", rc == 0 and out == "", out)
-    rc, out = hook("session_start.py", {"source": "startup"}, {"ONPLATFORM_BANNER": "off"})
-    expect("ONPLATFORM_BANNER=off turns it off", rc == 0 and out == "", out)
 
     print("commit guard:")
     base = tempfile.mkdtemp(prefix="hig-guard-")
