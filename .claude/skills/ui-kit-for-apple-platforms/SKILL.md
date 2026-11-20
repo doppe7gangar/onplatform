@@ -40,6 +40,12 @@ trust the ones that don't overlap.
 | `references/` | **Read when the target needs it**: `macos.md`, `ipados.md`, `react.md`, `tailwind.md`, `liquid-glass.md`, `typography.md`, `beyond-the-recipes.md`. |
 | `ui-kit-tokens.json` | **Every measurement**, 945 renderings × colours + geometry + state. Query it for anything the recipes don't cover. |
 
+Everything named here is in this skill's folder, `${CLAUDE_SKILL_DIR}`.
+Search the tokens and recipes with the Grep tool and open them with Read. Run a script
+as one plain command, `python3 ${CLAUDE_SKILL_DIR}/sf_icons.py ./design`, with no `cd`,
+pipe or `2>&1` around it: one approval then covers it for good, where a
+compound command asks again every time.
+
 ## Picking a target
 
 | Building for | Use | Note |

@@ -10,6 +10,12 @@ read from. This skill is the part around them: knowing which page holds
 the answer, the figures as data, the API behind the guidance, and checks
 for code. Six references:
 
+Everything named here is in this skill's folder, `${CLAUDE_SKILL_DIR}`.
+Search the references with the Grep tool and open them with Read. Run a script
+as one plain command, `python3 ${CLAUDE_SKILL_DIR}/hig_page.py sheets`, with no `cd`,
+pipe or `2>&1` around it: one approval then covers it for good, where a
+compound command asks again every time.
+
 | File | Use it for |
 |---|---|
 | `references/topics.md` | **Which page says it**: every HIG page with its official address and the platforms it covers |
@@ -21,9 +27,9 @@ for code. Six references:
 
 ## How to answer
 
-1. **Find the page.** `grep -i "sheet" references/topics.md`. When the topic
+1. **Find the page.** Grep `references/topics.md` for "sheet". When the topic
    isn't a component, `concepts.md` says where it's filed.
-2. **Read it on Apple's site.** `python3 hig_page.py sheets` prints the
+2. **Read it on Apple's site.** `python3 ${CLAUDE_SKILL_DIR}/hig_page.py sheets` prints the
    page, fetched from developer.apple.com (`--section "Platform
    considerations"` or `--grep sidebar` for part of it); fetching the
    official address yourself works too. That is the only source for what Apple says: model

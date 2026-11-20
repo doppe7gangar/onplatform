@@ -12,6 +12,12 @@ Specialists:
 - `motion-for-apple-platforms` — interaction physics and animation
 - `design-workflow` — hierarchy, content, divergence, composition, adaptivity, interaction architecture, coherence, project grammar, implementation audit, reduction, and critique
 
+Everything named here is in this skill's folder, `${CLAUDE_SKILL_DIR}`.
+Search the references with the Grep tool and open them with Read. Run a script
+as one plain command, `python3 ${CLAUDE_SKILL_DIR}/check_design.py ./design`, with no `cd`,
+pipe or `2>&1` around it: one approval then covers it for good, where a
+compound command asks again every time.
+
 ## Authority rule
 Use `HIG → platform differences → system APIs/components → product composition → measured visual evidence (when available) → project grammar → design judgment`.
 

@@ -1,5 +1,5 @@
 ---
-description: Turn an approved design into SwiftUI without losing screens, states or symbols, and prove nothing was lost.
+description: Turn an approved design into SwiftUI, and prove nothing was lost
 argument-hint: "[design folder] [SwiftUI project folder]"
 disable-model-invocation: true
 ---

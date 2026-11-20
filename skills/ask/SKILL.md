@@ -1,5 +1,5 @@
 ---
-description: Answer a question about Apple's Human Interface Guidelines from the official page itself, with the link, the platform each figure applies to, and any quotes checked word for word.
+description: Answer from Apple's HIG page itself, with the link and checked quotes
 argument-hint: "<question>"
 disable-model-invocation: true
 ---

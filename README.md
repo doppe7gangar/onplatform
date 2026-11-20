@@ -164,6 +164,7 @@ what you ask; the commands are for when you know which step you want.
 | `/onplatform:handoff [design] [app]` | The design into SwiftUI, checked for anything lost on the way |
 | `/onplatform:preview [folder]` | A live preview of a design that reloads itself as it changes; `--phone` to open it on a phone on the same network |
 | `/onplatform:store [folder]` | App Store and Google Play screenshots at the stores' sizes, captioned on the brand colour or bare, checked for size and alpha |
+| `/onplatform:setup` | Adds two narrow rules to your settings so the skills read their own files and run their own scripts without asking each time |
 | `/onplatform:ship [folder]` | Ready to publish: it won't call a design ready while it carries SF Pro, SF Symbols or a file without its licence |
 
 **A designer to talk to.** Start a whole session as the plugin's designer,
@@ -199,6 +200,9 @@ or ask for one by name, e.g. `@agent-onplatform:reviewer look at SettingsView.sw
   platform's own example screens, and ranks what most gives it away as not
   native.
 
+When a session starts, one line says onplatform is on and where its
+commands and agents are.
+
 Two checks run by themselves:
 
 - **After Claude writes or edits a `.swift` file**, `check_swiftui.py` runs
@@ -208,7 +212,7 @@ Two checks run by themselves:
   checked, and the command is stopped if SF Pro, SF Symbols or Apple's
   images would go along with it.
 
-To turn one off, set `ONPLATFORM_SWIFTUI_HOOK`, `ONPLATFORM_COMPOSE_HOOK` or `ONPLATFORM_COMMIT_GUARD` to `off`
+To turn one off, set `ONPLATFORM_SWIFTUI_HOOK`, `ONPLATFORM_COMPOSE_HOOK`, `ONPLATFORM_COMMIT_GUARD` or `ONPLATFORM_BANNER` to `off`
 in the `env` of `~/.claude/settings.json`.
 
 ### In your own CI

@@ -24,6 +24,12 @@ a scheme that reads as Android rather than as a palette.
 | `android-example.html` | Five phones and a component sheet, light and dark. `verify_android_ui.py` measures it. |
 | `check_compose.py` | Material 3 problems in Jetpack Compose code that the code alone decides: text under 11 sp, literal colours, unlabelled icon buttons, targets under 48 dp, Material 2 imports |
 
+Everything named here is in this skill's folder, `${CLAUDE_SKILL_DIR}`.
+Search the recipes and icon names with the Grep tool and open them with Read. Run a script
+as one plain command, `python3 ${CLAUDE_SKILL_DIR}/build_m3_theme.py "#C1552E"`, with no `cd`,
+pipe or `2>&1` around it: one approval then covers it for good, where a
+compound command asks again every time.
+
 ## Use it
 
 For a whole app, let design-workflow scaffold it, which wires all of this

@@ -1,5 +1,5 @@
 ---
-description: Get a design ready to leave your hands (a public repo, a website, a zip for a client) and refuse to call it ready while it carries something it mustn't, such as SF Pro, SF Symbols, Apple's images, or a font without its licence.
+description: Make a design safe to publish: no SF Pro, SF Symbols or unlicensed files
 argument-hint: "[design folder]"
 disable-model-invocation: true
 ---

@@ -1,5 +1,5 @@
 ---
-description: Review SwiftUI, UIKit or AppKit code against Apple's Human Interface Guidelines, Jetpack Compose or Android layouts against Material 3, or a design folder against its platform, with each finding sorted into violation, guidance or judgment and linked to the page it rests on.
+description: Review Swift, Compose or a design against Apple's or Google's guidelines
 argument-hint: "[files or folder]"
 disable-model-invocation: true
 ---

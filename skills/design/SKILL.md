@@ -1,5 +1,5 @@
 ---
-description: Design an app, site or dashboard from a brief to a working prototype that reads as native on iPhone, iPad, Mac or Android, checked in a real browser before it's handed over.
+description: Design an app or site from a brief, as a tappable, checked prototype
 argument-hint: "<what you want to build>"
 disable-model-invocation: true
 ---
