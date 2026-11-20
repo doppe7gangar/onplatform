@@ -165,8 +165,20 @@ what you ask; the commands are for when you know which step you want.
 | `/onplatform:handoff [design] [app]` | The design into SwiftUI, checked for anything lost on the way |
 | `/onplatform:preview [folder]` | A live preview of a design that reloads itself as it changes; `--phone` to open it on a phone on the same network |
 | `/onplatform:store [folder]` | App Store and Google Play screenshots at the stores' sizes, captioned on the brand colour or bare, checked for size and alpha |
-| `/onplatform:setup` | Adds two narrow rules to your settings so the skills read their own files and run their own scripts without asking each time |
+| `/onplatform:setup` | Adds two narrow rules to your settings so the skills read their own files and run their own scripts without asking each time, and, if you want it, onplatform's status line |
 | `/onplatform:ship [folder]` | Ready to publish: it won't call a design ready while it carries SF Pro, SF Symbols or a file without its licence |
+
+**onplatform mode.** Run `/output-style onplatform:onplatform` and every reply
+talks like a designer: the verdict first, the rule with its number and
+platform, the fix, one footer line. Code still gets written as usual.
+`/onplatform:setup` can also add a status line that says what you're
+designing, read from the design folder you're in:
+
+```
+◆ onplatform  iPhone · tab bar · Thirsty  ·  Opus
+```
+
+It never replaces a status line you already have.
 
 **A designer to talk to.** Start a whole session as the plugin's designer,
 in an empty folder:
@@ -354,6 +366,7 @@ python3 ~/.claude/skills/ui-kit-for-android/build_m3_theme.py "#C1552E" --format
 |---|---|
 | `.claude/skills/` | The five skills above, each with its own `SKILL.md` |
 | `skills/`, `agents/`, `hooks/` | The plugin's commands, agents and automatic checks |
+| `output-styles/` | onplatform's output style, for `/output-style` |
 | `.claude-plugin/` | The plugin and its marketplace, for `/plugin install` |
 | `action.yml` | The GitHub Action |
 | `scripts/` | The token builders and the checks |

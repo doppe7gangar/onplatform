@@ -206,7 +206,39 @@ def main():
     expect("running it twice adds nothing", "Already set up" in p2.stdout and again == rules, p2.stdout)
     p = subprocess.run([sys.executable, allow, "--check"], capture_output=True, text=True, env=env)
     expect("--check says set up afterwards", p.returncode == 0, p.stdout)
+    sp = os.path.join(home, ".claude", "settings.json")
+    p = subprocess.run([sys.executable, allow, "--apply", "--statusline"], capture_output=True, text=True, env=env)
+    cfg = json.load(open(sp))
+    cmd = (cfg.get("statusLine") or {}).get("command", "")
+    expect("--statusline sets onplatform's status line and keeps the rules",
+           p.returncode == 0 and "statusline.py" in cmd and cfg["permissions"]["allow"] == rules, p.stdout)
+    cfg["statusLine"] = {"type": "command", "command": "my-own-line"}
+    json.dump(cfg, open(sp, "w"))
+    p = subprocess.run([sys.executable, allow, "--apply", "--statusline"], capture_output=True, text=True, env=env)
+    expect("someone else's status line is never replaced",
+           json.load(open(sp))["statusLine"]["command"] == "my-own-line" and "Kept your status line" in p.stdout,
+           p.stdout)
     shutil.rmtree(home, ignore_errors=True)
+
+    print("status line and output style:")
+    line = os.path.join(ROOT, "skills", "setup", "statusline.py")
+    proj = tempfile.mkdtemp(prefix="onp-line-")
+    subprocess.run([sys.executable, SCAFFOLD, "--name", "Pantry", "--brand", "#C1552E", "--kind", "ios",
+                    "--model", "tabs", "-o", os.path.join(proj, "design")], check=True, capture_output=True)
+    session = json.dumps({"workspace": {"current_dir": proj}, "model": {"display_name": "Opus"}})
+    p = subprocess.run([sys.executable, line], input=session, capture_output=True, text=True,
+                       env=dict(os.environ, NO_COLOR="1"))
+    expect("inside a design it names the platform, layout and product",
+           p.stdout.strip() == "◆ onplatform  iPhone · tab bar · Pantry  ·  Opus", p.stdout)
+    p = subprocess.run([sys.executable, line], input=json.dumps({"workspace": {"current_dir": home}}),
+                       capture_output=True, text=True, env=dict(os.environ, NO_COLOR="1"))
+    expect("anywhere else it's just the product", p.stdout.strip() == "◆ onplatform", p.stdout)
+    p = subprocess.run([sys.executable, line], input="not json", capture_output=True, text=True)
+    expect("bad input still prints a line", p.returncode == 0 and "onplatform" in p.stdout, p.stderr)
+    shutil.rmtree(proj, ignore_errors=True)
+    style = open(os.path.join(ROOT, "output-styles", "onplatform.md"), encoding="utf-8").read()
+    expect("the output style has a name, a description and keeps coding instructions",
+           style.startswith("---\nname: onplatform\ndescription: ") and "keep-coding-instructions: true" in style)
 
     print("commit guard:")
     base = tempfile.mkdtemp(prefix="hig-guard-")

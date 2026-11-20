@@ -16,6 +16,10 @@ script, no writes.
     python3 allow.py            show the rules and where they'd go
     python3 allow.py --apply    add them (a copy of the old settings is kept)
     python3 allow.py --check    exit 0 if they're already there
+
+With --statusline it also sets onplatform's status line (statusline.py),
+which shows the platform and layout of the design you're in. It never
+replaces a status line you already have; it says what's there instead.
 """
 
 import argparse
@@ -42,6 +46,19 @@ def rules():
     return [f"Read(/{b}/**)", f"Bash(python3 {b}/*)"]
 
 
+def statusline_command():
+    """Run whichever version is installed, so /plugin updates don't break it."""
+    b, root = base(), os.path.realpath(ROOT)
+    if b == root:
+        return f'python3 "{root}/skills/setup/statusline.py"'
+    return (f'python3 "$(ls -d {b}/*/skills/setup/statusline.py 2>/dev/null | sort -V | tail -1)"')
+
+
+def ours(settings):
+    cmd = (settings.get("statusLine") or {}).get("command", "")
+    return "statusline.py" in cmd and "onplatform" in cmd
+
+
 def load():
     try:
         return json.load(open(SETTINGS, encoding="utf-8"))
@@ -58,6 +75,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--apply", action="store_true")
     ap.add_argument("--check", action="store_true")
+    ap.add_argument("--statusline", action="store_true", help="also set the status line")
     a = ap.parse_args()
     try:
         settings = load()
@@ -66,24 +84,42 @@ def main():
         print("\n".join("  " + r for r in rules()))
         return 1
     todo = missing(settings)
+    line = None
+    if a.statusline:
+        if ours(settings):
+            pass
+        elif settings.get("statusLine"):
+            print("Kept your status line, which is already set to: "
+                  + json.dumps(settings["statusLine"].get("command", settings["statusLine"])))
+        else:
+            line = {"type": "command", "command": statusline_command(), "padding": 0}
     if a.check:
         return 0 if not todo else 1
-    if not todo:
-        print(f"Already set up: both rules are in {SETTINGS}.")
+    if not todo and not line:
+        print(f"Already set up: everything is in {SETTINGS}.")
         return 0
     if not a.apply:
-        print(f"Would add to permissions.allow in {SETTINGS}:")
-        print("\n".join("  " + r for r in todo))
+        if todo:
+            print(f"Would add to permissions.allow in {SETTINGS}:")
+            print("\n".join("  " + r for r in todo))
+        if line:
+            print(f"Would set statusLine in {SETTINGS} to:\n  {line['command']}")
         return 0
     if os.path.exists(SETTINGS):
         shutil.copy2(SETTINGS, SETTINGS + ".onplatform-backup")
-    settings.setdefault("permissions", {}).setdefault("allow", []).extend(todo)
+    if todo:
+        settings.setdefault("permissions", {}).setdefault("allow", []).extend(todo)
+    if line:
+        settings["statusLine"] = line
     os.makedirs(os.path.dirname(SETTINGS), exist_ok=True)
     with open(SETTINGS, "w", encoding="utf-8") as fh:
         json.dump(settings, fh, indent=2)
         fh.write("\n")
     print(f"Added to {SETTINGS}:")
-    print("\n".join("  " + r for r in todo))
+    if todo:
+        print("\n".join("  " + r for r in todo))
+    if line:
+        print("  statusLine: onplatform's status line")
     if os.path.exists(SETTINGS + ".onplatform-backup"):
         print(f"The previous file is at {SETTINGS}.onplatform-backup.")
     return 0
