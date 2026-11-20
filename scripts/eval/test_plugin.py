@@ -8,7 +8,8 @@
   frontmatter it needs, and every ${CLAUDE_PLUGIN_ROOT} path any of them, or
   hooks.json, names exists.
 - The SwiftUI hook reports a seeded file's violations, says nothing about a
-  clean one, a non-Swift file or a repeat, and never fails.
+  clean one, a non-Swift file or a repeat, and never fails; it does the same
+  for a Compose file against Material 3. Each hook's `if` is one rule.
 - The commit guard denies a commit or push that would take SF Pro along,
   allows it once git ignores the font, ignores commands that aren't commits
   or pushes, finds the repository through `git -C` and `cd`, and turns off
@@ -118,7 +119,11 @@ def main():
                + ("can write the design" if writes else "read-only"), ok, fields)
         named += plugin_paths(body)
     hooks_text = open(os.path.join(ROOT, "hooks", "hooks.json")).read()
-    json.loads(hooks_text)
+    conds = [h.get("if", "") for es in json.loads(hooks_text)["hooks"].values()
+             for e in es for h in e["hooks"]]
+    # Claude Code reads an `if` as one permission rule: "A|B" never matches,
+    # so the hook silently never runs. One rule per hook.
+    expect("each hook's `if` is a single rule", not any("|" in c for c in conds), conds)
     named += plugin_paths(hooks_text)
     missing = sorted({p for p in named if not os.path.exists(ROOT + p)})
     expect(f"all {len(set(named))} ${{CLAUDE_PLUGIN_ROOT}} paths exist", not missing, missing)
@@ -173,6 +178,16 @@ def main():
     expect("bad input never fails the edit", rc == 0 and out == "", out)
     rc, out = hook("swiftui_check.py", dict(event, session_id="t2"), {"ONPLATFORM_SWIFTUI_HOOK": "off"})
     expect("ONPLATFORM_SWIFTUI_HOOK=off turns it off", rc == 0 and out == "", out)
+    kt = os.path.join(data, "Home.kt")
+    open(kt, "w").write("import androidx.compose.material3.Text\n\n@Composable\nfun Home() {\n"
+                        "    Text(\"Hi\", fontSize = 9.sp)\n}\n")
+    kt_event = {"session_id": "t3", "cwd": ROOT, "tool_name": "Write", "tool_input": {"file_path": kt}}
+    rc, out = hook("swiftui_check.py", kt_event, {"CLAUDE_PLUGIN_DATA": data})
+    ctx = json.loads(out)["hookSpecificOutput"]["additionalContext"] if out else ""
+    expect("a Compose file's violations come back, against Material 3",
+           rc == 0 and ctx.startswith("Material 3 check on Home.kt") and "- violation" in ctx, out)
+    rc, out = hook("swiftui_check.py", dict(kt_event, session_id="t4"), {"ONPLATFORM_COMPOSE_HOOK": "off"})
+    expect("ONPLATFORM_COMPOSE_HOOK=off turns it off", rc == 0 and out == "", out)
     shutil.rmtree(data, ignore_errors=True)
 
     print("commit guard:")

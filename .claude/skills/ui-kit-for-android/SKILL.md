@@ -1,6 +1,6 @@
 ---
 name: ui-kit-for-android
-description: Material 3 for Android designs, measured from Google's Material 3 Design Kit: the colour scheme in light and dark, the Roboto type scale, shapes and elevation, and CSS recipes for the phone frame, top app bars, nav bar and rail, buttons, FABs, chips, cards, lists, search, switches, text fields, dialogs, menus, tabs, bottom sheets, snackbars and progress, with Material Symbols and a theme builder that derives a full scheme from one brand colour for CSS, Jetpack Compose or Android XML. Use whenever a design or prototype should look like a native Android app ("design an Android app", "Material You", "Material 3", "make it look like a Pixel app", a Play Store screenshot, an Android version of an iOS design) and whenever someone asks how an Android screen should look. Not for making Android look like iOS; that's ui-kit-for-apple-platforms.
+description: Material 3 for Android designs, measured from Google's Material 3 Design Kit: light and dark colour roles, Roboto type scale, shapes, CSS recipes for app bars, nav bar and rail, buttons, FABs, chips, cards, lists, fields, dialogs and sheets, Material Symbols, and a theme builder from one brand colour for CSS, Jetpack Compose or Android XML. Use whenever something should look like a native Android app: "design an Android app", "Material You", "Material 3", "make it look like a Pixel app", a Play Store screenshot, an Android version of an iOS design.
 ---
 
 # Material 3 for the web
@@ -22,6 +22,7 @@ a scheme that reads as Android rather than as a palette.
 | `icon.py` | Material Symbols as inline SVG: 158 common icons, outlined and filled, drawn for 24 dp |
 | `icons/names.txt` | Every Material Symbols name, so a checker can tell a real icon from a made-up one |
 | `android-example.html` | Five phones and a component sheet, light and dark. `verify_android_ui.py` measures it. |
+| `check_compose.py` | Material 3 problems in Jetpack Compose code that the code alone decides: text under 11 sp, literal colours, unlabelled icon buttons, targets under 48 dp, Material 2 imports |
 
 ## Use it
 
@@ -121,6 +122,11 @@ text contrast, the Roboto load, the icons' glyphs, and whether a brand
 theme from `build_m3_theme.py` reaches every component, in 268 checks.
 The expected numbers are written into the verifier, not read back from
 the stylesheet, so a recipe that drifts from the kit fails.
+
+For Jetpack Compose code, `python3 check_compose.py <files or folders>`
+reports what the code alone decides, as violations, guidance and API
+issues, each linked to the Material page; `--json` for a machine. The
+plugin runs it after every `.kt` edit.
 
 For a design, design-workflow's `check_design.py` treats a page that links
 `material-components.css` as Android: Roboto, a top app bar, Material

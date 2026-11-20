@@ -62,6 +62,9 @@ jobs:
       - name: SwiftUI checker
         run: python scripts/eval/test_check_swiftui.py
 
+      - name: Compose checker
+        run: python scripts/eval/test_check_compose.py
+
       - name: Quote checker
         run: python scripts/eval/test_check_quotes.py
 

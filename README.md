@@ -66,8 +66,9 @@ puts back what you had; `--checks` also installs Playwright, which lets the
 skills screenshot and check their designs. A newer release comes with its
 own installer: download that one the same way.
 
-Use one or the other: with both, every skill loads twice. To move from the
-installer to the plugin, run `bash install.sh --rollback` first.
+Use one or the other: with both, every skill loads twice, so the installer
+stops if it finds the plugin installed. To move from the installer to the
+plugin, run `bash install.sh --rollback` first.
 
 No Claude Code yet? Run `curl -fsSL https://claude.ai/install.sh | bash` first.
 
@@ -201,12 +202,13 @@ or ask for one by name, e.g. `@agent-onplatform:reviewer look at SettingsView.sw
 Two checks run by themselves:
 
 - **After Claude writes or edits a `.swift` file**, `check_swiftui.py` runs
-  on it and the violations go straight back to Claude to fix.
+  on it and the violations go straight back to Claude to fix. A Jetpack
+  Compose `.kt` file gets the same from `check_compose.py`, against Material 3.
 - **Before `git commit` or `git push`**, every design in the repository is
   checked, and the command is stopped if SF Pro, SF Symbols or Apple's
   images would go along with it.
 
-To turn either off, set `ONPLATFORM_SWIFTUI_HOOK` or `ONPLATFORM_COMMIT_GUARD` to `off`
+To turn one off, set `ONPLATFORM_SWIFTUI_HOOK`, `ONPLATFORM_COMPOSE_HOOK` or `ONPLATFORM_COMMIT_GUARD` to `off`
 in the `env` of `~/.claude/settings.json`.
 
 ### In your own CI
