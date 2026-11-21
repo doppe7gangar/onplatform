@@ -19,6 +19,14 @@ sys.path.insert(0, os.path.join(ROOT, "skills", "setup"))
 import statusline  # noqa: E402
 
 WIDTH = 66
+# The onplatform logo, a monitor on its stand and the word in pixel
+# letters, drawn two pixels to a character with half blocks.
+LOGO = [
+    ' ▄▄▄▄▄               ▄     ▄    ▄▄   +',
+    ' █   █   ▄▄▄ ▄▄  ▄▄▄ █  ▄▄ █▄▄ █▄▄ ▄▄▄ ▄ ▄ ▄▄▄▄',
+    ' ▀███▀   █ █ █ █ █▄█ █ █ █ █   █   █ █ █▀  █ █ █',
+    '▀▀▀▀▀▀▀  ▀▀▀ ▀ ▀ █   ▀  ▀▀  ▀▀ ▀   ▀▀▀ ▀   ▀ ▀ ▀',
+]
 TRY = ["Design an iPhone app for tracking house plants",
        "Is a 30 × 30 pt toolbar button too small?",
        "/onplatform:review HomeView.swift"]
@@ -49,9 +57,9 @@ def card(cwd, setup, style):
     home = os.path.expanduser("~")
     where = "~" + cwd[len(home):] if cwd == home or cwd.startswith(home + "/") else cwd
 
-    rows = ["",
-            " ▟█▙  Welcome to onplatform",
-            " ▜█▛  Designs that look native on iPhone, iPad, Mac and Android",
+    rows = [""] + [" " + a for a in LOGO] + [
+            "",
+            "Designs that look native on iPhone, iPad, Mac and Android",
             "",
             f"Directory:  {where}",
             f"Design:     {design or 'none here yet'}",
