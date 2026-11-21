@@ -841,13 +841,13 @@ body {
      Plus and Air), and each compact side is 52.33pt (62.33pt) by 36.67pt.
      What is left between the two sides is the island at rest: 125.33 x
      36.67pt, 11pt from the top of the screen. */
-  --ios-island-w: 125.33px;
-  --ios-island-h: calc(110px / 3); /* 36.67, without the layout rounding down */
+  --island-w: 125.33px;
+  --island-h: calc(110px / 3); /* 36.67, without the layout rounding down */
   flex: none;
   position: relative;
   display: grid;
-  width: var(--ios-island-w);
-  height: var(--ios-island-h);
+  width: var(--island-w);
+  height: var(--island-h);
   margin-top: 8px; /* + the bar's 3pt padding = 11pt from the top */
   border-radius: 999px;
   background: #000;
@@ -880,16 +880,16 @@ body {
    is black in light and dark mode alike; it is a hole in the screen. */
 
 .ios-statusbar--max .ios-statusbar__island {
-  --ios-island-compact-w: 250px;
-  --ios-island-side: 62.33px;
-  --ios-island-expanded-w: 408px;
+  --island-compact-w: 250px;
+  --island-side: 62.33px;
+  --island-expanded-w: 408px;
 }
 
 .ios-statusbar__island[data-island] { pointer-events: auto; cursor: pointer; }
 
 .ios-statusbar__island[data-island="compact"] {
-  width: var(--ios-island-compact-w, 230px);
-  grid-template-columns: var(--ios-island-side, 52.33px) 1fr var(--ios-island-side, 52.33px);
+  width: var(--island-compact-w, 230px);
+  grid-template-columns: var(--island-side, 52.33px) 1fr var(--island-side, 52.33px);
 }
 
 .ios-island__leading,
@@ -898,7 +898,7 @@ body {
   align-items: center;
   justify-content: center;
   min-width: 0;
-  height: var(--ios-island-h);
+  height: var(--island-h);
   font: 590 15px/20px var(--ios-font);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -927,9 +927,9 @@ body {
   left: calc(100% + 6px);
   align-items: center;
   justify-content: center;
-  min-width: var(--ios-island-h);
+  min-width: var(--island-h);
   max-width: 45px;
-  height: var(--ios-island-h);
+  height: var(--island-h);
   padding: 0 4px;
   box-sizing: border-box;
   border-radius: 999px;
@@ -951,7 +951,7 @@ body {
   top: 11px;
   margin: 0;
   transform: translateX(-50%);
-  width: var(--ios-island-expanded-w, 371px);
+  width: var(--island-expanded-w, 371px);
   height: auto;
   min-height: 84px;
   max-height: 160px;
