@@ -366,7 +366,7 @@ def run(pw, scheme, c, contrast_more=False):
         c(g["sbH"] == 62, "kit: status bar is 62pt", str(g["sbH"]))
         c((g["sbFont"], g["sbW"]) == ("17px", "590"), "kit: status bar time is 17pt semibold",
           f"{g['sbFont']} {g['sbW']}")
-        c((round(g["islW"]), round(g["islH"])) == (95, 37), "kit: Dynamic Island is 95 x 37",
+        c((round(g["islW"], 2), round(g["islH"], 1)) == (125.33, 36.7), "kit: Dynamic Island at rest is 125.33 x 36.67 (HIG)",
           f"{g['islW']} x {g['islH']}")
         c(g["ctlH"] == 44, "kit: glass controls are 44pt", str(g["ctlH"]))
         c(g["ctlColor"] == kit["--ios-label-vibrant"], "kit: glass controls are monochrome", g["ctlColor"])

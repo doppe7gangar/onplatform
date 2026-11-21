@@ -804,8 +804,8 @@ body {
 
    Measured from Apple's iOS 27 kit, Status Bars and Menu Bars/iPhone at
    393pt wide: the time sits 52pt from the leading edge, the Dynamic
-   Island is 122x36pt and exactly centred (its midpoint lands on 196.4
-   against the screen's 196.5), and the three indicators are right
+   Island is exactly centred (its midpoint lands on 196.4 against the
+   screen's 196.5) and takes the HIG's 125.33 x 36.67pt, and the three indicators are right
    grouped at 12-13pt tall with roughly 7pt between them.
 
    The glyphs here are drawn, not Apple's. SF Symbols cannot ship in a
@@ -836,14 +836,147 @@ body {
 }
 
 .ios-statusbar__island {
+  /* Apple's sizes, from the Live Activities page of the HIG: the compact
+     island is 230pt on iPhone 17, 17 Pro, 16 and 16 Pro (250pt on the Max,
+     Plus and Air), and each compact side is 52.33pt (62.33pt) by 36.67pt.
+     What is left between the two sides is the island at rest: 125.33 x
+     36.67pt, 11pt from the top of the screen. */
+  --ios-island-w: 125.33px;
+  --ios-island-h: calc(110px / 3); /* 36.67, without the layout rounding down */
   flex: none;
-  width: 95px;
-  height: 37px;
-  margin-top: 8px;
+  position: relative;
+  display: grid;
+  width: var(--ios-island-w);
+  height: var(--ios-island-h);
+  margin-top: 8px; /* + the bar's 3pt padding = 11pt from the top */
   border-radius: 999px;
   background: #000;
+  color: #fff;
   pointer-events: none;
+  transition: width .35s cubic-bezier(.3, 1.3, .4, 1), height .35s cubic-bezier(.3, 1.3, .4, 1),
+              border-radius .35s ease;
 }
+
+/* ------------------------------------------------------ Live Activities
+
+   One Live Activity in the island. Put its parts inside the island and
+   name the presentation with data-island:
+
+     <span class="ios-statusbar__island" data-island="compact">
+       <span class="ios-island__leading">(symbol)</span>
+       <span class="ios-island__trailing">12:04</span>
+       <span class="ios-island__expanded">...</span>   optional, on tap
+     </span>
+
+   compact    the island grows to 230pt (250pt on a Max): leading and
+              trailing are 52.33pt (62.33pt) wide either side of the
+              camera, all 36.67pt tall
+   minimal    a second activity: the island stays at rest and this one
+              sits detached beside it, 36.67 to 45pt wide, 36.67pt tall
+   expanded   371pt wide (408pt on a Max), 84 to 160pt tall, 44pt
+              corners; prototype.js opens it when the island is tapped
+
+   Add .ios-statusbar--max for the 430 and 440pt wide phones. The island
+   is black in light and dark mode alike; it is a hole in the screen. */
+
+.ios-statusbar--max .ios-statusbar__island {
+  --ios-island-compact-w: 250px;
+  --ios-island-side: 62.33px;
+  --ios-island-expanded-w: 408px;
+}
+
+.ios-statusbar__island[data-island] { pointer-events: auto; cursor: pointer; }
+
+.ios-statusbar__island[data-island="compact"] {
+  width: var(--ios-island-compact-w, 230px);
+  grid-template-columns: var(--ios-island-side, 52.33px) 1fr var(--ios-island-side, 52.33px);
+}
+
+.ios-island__leading,
+.ios-island__trailing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  height: var(--ios-island-h);
+  font: 590 15px/20px var(--ios-font);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--tint, var(--ios-accent));
+}
+
+.ios-island__leading { grid-column: 1; }
+
+/* At 230pt the island leaves 78pt either side on a 402pt phone, too
+   little for three indicators beside it: the cellular bars give way, the
+   way the phone drops indicators when the island is wide. A minimal
+   activity takes the space beside the island, so only the battery stays. */
+.ios-statusbar:has(> [data-island="compact"]) .ios-statusbar__indicators > :first-child,
+.ios-statusbar:has(> [data-island="minimal"]) .ios-statusbar__indicators > :not(:last-child) { display: none; }
+.ios-island__trailing { grid-column: 3; }
+.ios-island__leading svg,
+.ios-island__trailing svg { width: 20px; height: 20px; }
+
+.ios-statusbar__island:not([data-island="compact"]) > .ios-island__leading,
+.ios-statusbar__island:not([data-island="compact"]) > .ios-island__trailing { display: none; }
+
+.ios-island__minimal {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: calc(100% + 6px);
+  align-items: center;
+  justify-content: center;
+  min-width: var(--ios-island-h);
+  max-width: 45px;
+  height: var(--ios-island-h);
+  padding: 0 4px;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background: #000;
+  color: var(--tint, var(--ios-accent));
+  font: 590 13px/16px var(--ios-font);
+}
+
+.ios-statusbar__island[data-island="minimal"] > .ios-island__minimal { display: flex; }
+.ios-island__minimal svg { width: 18px; height: 18px; }
+
+.ios-island__expanded { display: none; }
+
+.ios-statusbar:has([data-island="expanded"]) { z-index: 60; }
+
+.ios-statusbar__island[data-island="expanded"] {
+  position: absolute;
+  left: 50%;
+  top: 11px;
+  margin: 0;
+  transform: translateX(-50%);
+  width: var(--ios-island-expanded-w, 371px);
+  height: auto;
+  min-height: 84px;
+  max-height: 160px;
+  border-radius: 44px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .22);
+}
+
+.ios-statusbar__island[data-island="expanded"] > .ios-island__expanded {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas: "leading center trailing" "bottom bottom bottom";
+  align-items: center;
+  gap: 4px 12px;
+  padding: 14px 20px 18px;
+  font: 400 15px/20px var(--ios-font);
+  color: #fff;
+}
+
+.ios-island__expanded > [data-region="leading"] { grid-area: leading; color: var(--tint, var(--ios-accent)); }
+.ios-island__expanded > [data-region="center"] { grid-area: center; font-weight: 590; }
+.ios-island__expanded > [data-region="trailing"] { grid-area: trailing; font: 590 22px/28px var(--ios-font);
+  font-variant-numeric: tabular-nums; color: var(--tint, var(--ios-accent)); }
+.ios-island__expanded > [data-region] svg { display: block; width: 24px; height: 24px; }
+.ios-island__expanded > [data-region="bottom"] { grid-area: bottom; color: rgba(235, 235, 245, .6); }
 
 .ios-statusbar__indicators {
   flex: 1;

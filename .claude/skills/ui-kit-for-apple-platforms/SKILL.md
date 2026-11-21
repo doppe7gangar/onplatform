@@ -99,6 +99,26 @@ custom buttons inside rows, shadows under cards, gradients on cards and
 buttons, coloured section backgrounds, and icons typed as characters or
 emoji. `check_design.py` fails the last one.
 
+## The Dynamic Island and Live Activities
+
+The status bar's island is drawn at Apple's size: 125.33 x 36.67pt at
+rest, 11pt from the top, centred. When the app has something running (a
+timer, a delivery, a round of tasks), show it as a Live Activity by
+putting `data-island` on the island, in one of Apple's three
+presentations, at the HIG's sizes:
+
+- `compact`: 230pt wide (250pt with `ios-statusbar--max`), with
+  `ios-island__leading` and `ios-island__trailing` at 52.33pt (62.33pt)
+  either side of the camera.
+- `minimal`: `ios-island__minimal`, a 36.67 to 45pt circle beside the
+  island, for a second activity.
+- `expanded`: `ios-island__expanded` with `data-region` leading, center,
+  trailing and bottom, 371pt (408pt) wide, 84 to 160pt tall, 44pt
+  corners. prototype.js opens it on a tap of the island.
+
+Only show one when the product really has a live task; a static app with
+an island full of content reads as a gimmick.
+
 ## Content first: what Apple's own apps open on
 
 Those four screens are the system's chrome and its lists, and an app
