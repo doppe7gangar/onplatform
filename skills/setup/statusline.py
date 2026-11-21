@@ -5,11 +5,11 @@ Claude Code pipes the session as JSON on stdin and shows the first line
 this prints under the prompt. It reads the design folder in the current
 directory, if there is one, so the line says what you're designing:
 
-    ◆ onplatform  iPhone · tab bar · Fern  ·  Opus
+    ◆ onplatform  ~/plants  ·  iPhone · tab bar · Thirsty  /onplatform:check
+                                                                          Opus 5 · context: 5%
 
-and, outside a design, just the product and the model:
-
-    ◆ onplatform  ·  Opus
+The diamond is filled while the onplatform output style is on. Outside a
+design, the first line ends with /onplatform:start instead.
 
 `/onplatform:setup` installs it; nothing here writes anything.
 """
@@ -51,23 +51,60 @@ def product(folder):
     return m.group(1) if m else None
 
 
-def line(session, colour=True):
+def visible(text):
+    return len(re.sub(r"\033\[[0-9;]*m", "", text))
+
+
+def lines(session, colour=True, width=None):
+    """Two lines, the way a terminal tool's footer reads: where you are and
+    what you're designing on the left, the model and context on the right."""
     cwd = (session.get("workspace") or {}).get("current_dir") or session.get("cwd") or os.getcwd()
     model = (session.get("model") or {}).get("display_name") or ""
+    used = (session.get("context_window") or {}).get("used_percentage")
+    style = (session.get("output_style") or {}).get("name", "")
     a, d, b, r = (ACCENT, DIM, BOLD, RESET) if colour else ("", "", "", "")
-    parts = []
+
+    home = os.path.expanduser("~")
+    where = "~" + cwd[len(home):] if home != "/" and (cwd == home or cwd.startswith(home + "/")) else cwd
+    mark = "◆" if "onplatform" in style else "◇"
+    first = f"{a}{mark}{r} {b}onplatform{r}  {where}"
+
     folder = design_folder(cwd)
     if folder:
         text = open(os.path.join(folder, "DESIGN.md"), encoding="utf-8").read()
         kind, spatial = section(text, "Platform mode"), section(text, "Spatial model")
-        parts = [PLATFORMS.get(kind, kind), MODELS.get(spatial, spatial), product(folder)]
-        parts = [p for p in parts if p]
-    out = f"{a}◆{r} {b}onplatform{r}"
-    if parts:
-        out += "  " + f" {d}·{r} ".join(parts)
-    if model:
-        out += f"  {d}·  {model}{r}"
-    return out
+        parts = [p for p in (PLATFORMS.get(kind, kind), MODELS.get(spatial, spatial), product(folder)) if p]
+        if parts:
+            first += f"  {d}·{r}  " + f" {d}·{r} ".join(parts)
+        first += f"  {d}/onplatform:check{r}"
+    else:
+        first += f"  {d}/onplatform:start{r}"
+
+    right = [x for x in (model, f"context: {used}%" if used is not None else "") if x]
+    second = f"{d}" + " · ".join(right) + f"{r}" if right else ""
+    if second and width:
+        second = " " * max(0, width - visible(second) - 2) + second
+    return [first, second] if second else [first]
+
+
+def line(session, colour=True):
+    return lines(session, colour)[0]
+
+
+def terminal_width():
+    """COLUMNS if the shell exported it, else the terminal's own size."""
+    try:
+        return int(os.environ["COLUMNS"])
+    except (KeyError, ValueError):
+        pass
+    try:
+        fd = os.open("/dev/tty", os.O_RDONLY)
+        try:
+            return os.get_terminal_size(fd).columns
+        finally:
+            os.close(fd)
+    except OSError:
+        return None
 
 
 def main():
@@ -75,7 +112,8 @@ def main():
         session = json.load(sys.stdin)
     except ValueError:
         session = {}
-    print(line(session, colour=not os.environ.get("NO_COLOR")))
+    width = terminal_width()
+    print("\n".join(lines(session, colour=not os.environ.get("NO_COLOR"), width=width)))
     return 0
 
 

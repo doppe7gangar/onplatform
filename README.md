@@ -156,7 +156,7 @@ what you ask; the commands are for when you know which step you want.
 
 | Command | What it does |
 |---|---|
-| `/onplatform:start` | Start here: what it does, three things to try, and whether setup is done |
+| `/onplatform:start` | Start here: a welcome card with the design in this folder, whether setup and the output style are on, and three things to try |
 | `/onplatform:design <what you want>` | A brief to a working, checked prototype: settle the screens, scaffold, build, check in a browser, render and review |
 | `/onplatform:check [folder]` | Every mechanical check on a design (taps, states, contrast, use of the kit, licences, the largest text, right to left, long text), fixed until it passes |
 | `/onplatform:review [files]` | A review of SwiftUI, UIKit or AppKit against the HIG, Compose or Android layouts against Material 3, or a design against its platform: violations, guidance and judgment, each linked to its page |
@@ -171,14 +171,17 @@ what you ask; the commands are for when you know which step you want.
 **onplatform mode.** Run `/output-style onplatform:onplatform` and every reply
 talks like a designer: the verdict first, the rule with its number and
 platform, the fix, one footer line. Code still gets written as usual.
-`/onplatform:setup` can also add a status line that says what you're
-designing, read from the design folder you're in:
+`/onplatform:setup` can also add a two-line status line that says where
+you are and what you're designing, read from the design folder you're in,
+with the model and how full the context is underneath:
 
 ```
-◆ onplatform  iPhone · tab bar · Thirsty  ·  Opus
+◆ onplatform  ~/plants  ·  iPhone · tab bar · Thirsty  /onplatform:check
+Opus 5 · context: 6%
 ```
 
-It never replaces a status line you already have.
+The diamond is filled while the output style is on. It never replaces a
+status line you already have.
 
 **A designer to talk to.** Start a whole session as the plugin's designer,
 in an empty folder:

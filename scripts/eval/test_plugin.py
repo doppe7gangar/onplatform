@@ -218,9 +218,8 @@ def main():
     expect("someone else's status line is never replaced",
            json.load(open(sp))["statusLine"]["command"] == "my-own-line" and "Kept your status line" in p.stdout,
            p.stdout)
-    shutil.rmtree(home, ignore_errors=True)
 
-    print("status line and output style:")
+    print("status line, welcome card and output style:")
     line = os.path.join(ROOT, "skills", "setup", "statusline.py")
     proj = tempfile.mkdtemp(prefix="onp-line-")
     subprocess.run([sys.executable, SCAFFOLD, "--name", "Pantry", "--brand", "#C1552E", "--kind", "ios",
@@ -228,14 +227,31 @@ def main():
     session = json.dumps({"workspace": {"current_dir": proj}, "model": {"display_name": "Opus"}})
     p = subprocess.run([sys.executable, line], input=session, capture_output=True, text=True,
                        env=dict(os.environ, NO_COLOR="1"))
-    expect("inside a design it names the platform, layout and product",
-           p.stdout.strip() == "◆ onplatform  iPhone · tab bar · Pantry  ·  Opus", p.stdout)
+    out = p.stdout.splitlines()
+    expect("inside a design it names the platform, layout and product, then model and context",
+           out[0] == f"◇ onplatform  {proj}  ·  iPhone · tab bar · Pantry  /onplatform:check"
+           and out[1] == "Opus", p.stdout)
+    styled = json.dumps({"workspace": {"current_dir": proj}, "output_style": {"name": "onplatform:onplatform"},
+                         "context_window": {"used_percentage": 12}})
+    p = subprocess.run([sys.executable, line], input=styled, capture_output=True, text=True,
+                       env=dict(os.environ, NO_COLOR="1", COLUMNS="60"))
+    out = p.stdout.splitlines()
+    expect("the diamond fills while the output style is on, and context sits at the right edge",
+           out[0].startswith("◆ onplatform") and out[1].endswith("context: 12%") and len(out[1]) == 58, p.stdout)
     p = subprocess.run([sys.executable, line], input=json.dumps({"workspace": {"current_dir": home}}),
                        capture_output=True, text=True, env=dict(os.environ, NO_COLOR="1"))
-    expect("anywhere else it's just the product", p.stdout.strip() == "◆ onplatform", p.stdout)
+    expect("anywhere else it points to /onplatform:start",
+           p.stdout.strip() == f"◇ onplatform  {home}  /onplatform:start", p.stdout)
+    p = subprocess.run([sys.executable, os.path.join(ROOT, "skills", "start", "card.py"), proj],
+                       capture_output=True, text=True, env=dict(os.environ, HOME=home))
+    rows = p.stdout.splitlines()
+    expect("/onplatform:start's card is a closed box naming the design",
+           p.returncode == 0 and rows[0].startswith("╭") and rows[-1].startswith("╰")
+           and len({len(r) for r in rows}) == 1 and "iPhone · tab bar · Pantry" in p.stdout, p.stdout)
     p = subprocess.run([sys.executable, line], input="not json", capture_output=True, text=True)
     expect("bad input still prints a line", p.returncode == 0 and "onplatform" in p.stdout, p.stderr)
     shutil.rmtree(proj, ignore_errors=True)
+    shutil.rmtree(home, ignore_errors=True)
     style = open(os.path.join(ROOT, "output-styles", "onplatform.md"), encoding="utf-8").read()
     expect("the output style has a name, a description and keeps coding instructions",
            style.startswith("---\nname: onplatform\ndescription: ") and "keep-coding-instructions: true" in style)
