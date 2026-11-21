@@ -17,15 +17,17 @@ line that shows the platform and layout of the design they're in:
 ```
 
 1. Show what would change:
-   `python3 ${CLAUDE_PLUGIN_ROOT}/skills/setup/allow.py --statusline`
+   `python3 ${CLAUDE_PLUGIN_ROOT}/skills/setup/allow.py --statusline --command`
    If it says everything is already set up, say so and stop.
 2. Tell the person in one short message what it printed: one rule lets
    Claude read the plugin's own files, the other lets it run the plugin's
-   own Python scripts, and nothing else; and the status line, shown as the
-   line above. If it kept their own status line, say it's left alone. Ask
+   own Python scripts, and nothing else; the status line, shown as the
+   line above; and the `onplatform` terminal command in `~/.local/bin`,
+   which opens Claude Code under onplatform's logo and, after a design,
+   `onplatform present design` shows it full screen. If it kept their own status line, say it's left alone. Ask
    whether to add it all, the rules only, or nothing.
-3. Only on a yes: `python3 ${CLAUDE_PLUGIN_ROOT}/skills/setup/allow.py --apply --statusline`
-   (without `--statusline` for the rules only). Say it's done, that the old
+3. Only on a yes: `python3 ${CLAUDE_PLUGIN_ROOT}/skills/setup/allow.py --apply --statusline --command`
+   (leave out what they said no to). Say it's done, that the old
    settings were copied beside the file, and that it takes effect in the
    next session.
 4. Close with one line: for onplatform's voice in every reply, run

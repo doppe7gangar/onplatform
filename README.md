@@ -168,6 +168,16 @@ what you ask; the commands are for when you know which step you want.
 | `/onplatform:setup` | Adds two narrow rules to your settings so the skills read their own files and run their own scripts without asking each time, and, if you want it, onplatform's status line |
 | `/onplatform:ship [folder]` | Ready to publish: it won't call a design ready while it carries SF Pro, SF Symbols or a file without its licence |
 
+**The `onplatform` command.** `/onplatform:setup` can put a command in
+`~/.local/bin`. `onplatform` opens Claude Code under the onplatform logo
+and a welcome box that says where you are and what you're designing.
+After a design, `onplatform present design` shows it full screen, the way
+Lazygit lays out a repository: the screens on the left with their checks
+and the designer's verdict, and a picture of the selected screen on the
+right (`j`/`k` to move, `d` for dark, `o` to open it in the browser). The
+picture is the real screenshot in iTerm2, WezTerm, kitty and Ghostty, and
+drawn in block characters elsewhere.
+
 **onplatform mode.** Run `/output-style onplatform:onplatform` and every reply
 talks like a designer: the verdict first, the rule with its number and
 platform, the fix, one footer line. Code still gets written as usual.
@@ -370,6 +380,7 @@ python3 ~/.claude/skills/ui-kit-for-android/build_m3_theme.py "#C1552E" --format
 | `.claude/skills/` | The five skills above, each with its own `SKILL.md` |
 | `skills/`, `agents/`, `hooks/` | The plugin's commands, agents and automatic checks |
 | `output-styles/` | onplatform's output style, for `/output-style` |
+| `bin/onplatform` | The terminal command: the logo and welcome box, and `present` |
 | `.claude-plugin/` | The plugin and its marketplace, for `/plugin install` |
 | `action.yml` | The GitHub Action |
 | `scripts/` | The token builders and the checks |

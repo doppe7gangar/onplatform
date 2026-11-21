@@ -1,0 +1,490 @@
+#!/usr/bin/env python3
+"""onplatform's own front door in the terminal.
+
+    onplatform [claude options]     the logo and the welcome box, then Claude
+                                    Code with the plugin
+    onplatform present [design]     a finished design, full screen: its
+                                    screens, checks and the designer's verdict,
+                                    with a picture of each screen
+    onplatform banner               just the logo and the welcome box
+
+The look follows Kimi CLI (a rounded welcome box, a quiet footer); the logo
+is drawn in pixels with a gradient, the way Gemini CLI and Antigravity draw
+theirs. Nothing here needs more than Python 3; pictures need Pillow, and a
+terminal that shows images (iTerm2, WezTerm, kitty, Ghostty) gets the real
+screenshot instead of a block-character one.
+"""
+
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import threading
+
+ROOT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, "skills", "setup"))
+import statusline  # noqa: E402
+
+ESC = "\033["
+RESET = ESC + "0m"
+GRAD = [(95, 247, 238), (63, 200, 245), (122, 140, 255), (164, 92, 255)]  # cyan to violet
+DIM, BOLD = ESC + "2m", ESC + "1m"
+
+
+def colour():
+    return sys.stdout.isatty() and not os.environ.get("NO_COLOR")
+
+
+def fg(rgb):
+    return f"{ESC}38;2;{rgb[0]};{rgb[1]};{rgb[2]}m"
+
+
+def bg(rgb):
+    return f"{ESC}48;2;{rgb[0]};{rgb[1]};{rgb[2]}m"
+
+
+def mix(stops, t):
+    t = min(max(t, 0.0), 1.0) * (len(stops) - 1)
+    i = min(int(t), len(stops) - 2)
+    a, b, f = stops[i], stops[i + 1], t - i
+    return tuple(round(a[k] + (b[k] - a[k]) * f) for k in range(3))
+
+
+# ---------------------------------------------------------------- the logo
+# A monitor on its stand and the word in pixel letters, eight pixels tall,
+# drawn two pixels to a character.
+GLYPHS = {
+    "o": ["...", "...", "...", "###", "#.#", "#.#", "###", "..."],
+    "n": ["...", "...", "...", "##.", "#.#", "#.#", "#.#", "..."],
+    "p": ["...", "...", "...", "###", "#.#", "###", "#..", "#.."],
+    "l": [".", "#", "#", "#", "#", "#", "#", "."],
+    "a": ["...", "...", "...", ".##", "#.#", "#.#", ".##", "..."],
+    "t": ["...", "#..", "#..", "###", "#..", "#..", ".##", "..."],
+    "f": ["...", ".##", "#..", "###", "#..", "#..", "#..", "..."],
+    "r": ["...", "...", "...", "#.#", "##.", "#..", "#..", "..."],
+    "m": [".....", ".....", ".....", "####.", "#.#.#", "#.#.#", "#.#.#", "....."],
+}
+ICON = [".......", ".#####.", ".#...#.", ".#...#.", ".#####.", "..###..", "#######", "......."]
+
+
+def logo_rows():
+    rows = [ICON[r] + ".." for r in range(8)]
+    for i, ch in enumerate("onplatform"):
+        for r in range(8):
+            rows[r] += GLYPHS[ch][r] + ("." if i < 9 else "")
+    return rows
+
+
+def logo(paint=True, big=None):
+    """Big: one pixel to two cells, with a drop shadow, like Gemini CLI's
+    banner. Small, for narrow terminals: two pixels to a half-block cell."""
+    rows = logo_rows()
+    width = len(rows[0])
+    if big is None:
+        big = shutil.get_terminal_size((80, 24)).columns >= 2 * width + 8
+    out = []
+    if big:
+        shadow = (40, 32, 92)
+        for y in range(9):
+            line = ""
+            for x in range(width + 1):
+                on = y < 8 and x < width and rows[y][x] == "#"
+                under = y > 0 and x > 0 and rows[y - 1][x - 1] == "#"
+                if on:
+                    line += (fg(mix(GRAD, x / (width - 1))) if paint else "") + "██"
+                elif under:
+                    line += (fg(shadow) if paint else "") + ("██" if paint else "░░")
+                else:
+                    line += "  "
+            out.append(line.rstrip() + (RESET if paint else ""))
+        spark = lambda c, ch: (fg(c) + ch + RESET) if paint else ch
+        out[3] = out[3] + " " * max(2, 2 * width + 4 - len(strip(out[3]))) + spark(GRAD[0], "✦")
+        out.insert(0, "  " + spark(GRAD[3], "+") + " " * (2 * width - 20) + spark(GRAD[1], "+"))
+        return out
+    for r in range(0, 8, 2):
+        line = ""
+        for x in range(width):
+            top, bot = rows[r][x] == "#", rows[r + 1][x] == "#"
+            ch = "█" if top and bot else "▀" if top else "▄" if bot else " "
+            if paint and ch != " ":
+                line += fg(mix(GRAD, x / (width - 1))) + ch
+            else:
+                line += ch
+        out.append(line.rstrip() + (RESET if paint else ""))
+    out[0] = out[0] + "   " + ((fg(GRAD[0]) + "✦" + RESET) if paint else "*")
+    return out
+
+
+# --------------------------------------------------------- the welcome box
+def box(rows, paint=True, accent=GRAD[1]):
+    width = max(len(strip(r)) for r in rows) + 4
+    c = fg(accent) if paint else ""
+    r_ = RESET if paint else ""
+    out = [f"{c}╭{'─' * width}╮{r_}"]
+    for row in rows:
+        out.append(f"{c}│{r_}  {row}{' ' * (width - 2 - len(strip(row)))}{c}│{r_}")
+    out.append(f"{c}╰{'─' * width}╯{r_}")
+    return out
+
+
+def strip(s):
+    return re.sub(r"\033\[[0-9;]*m", "", s)
+
+
+def setup_done():
+    p = subprocess.run([sys.executable, os.path.join(ROOT, "skills", "setup", "allow.py"), "--check"],
+                       capture_output=True)
+    return p.returncode == 0
+
+
+def design_line(cwd):
+    first = statusline.lines({"workspace": {"current_dir": cwd}}, colour=False)[0]
+    return first.split("  ·  ", 1)[1].split("  /", 1)[0] if "  ·  " in first else None
+
+
+def banner(paint=None):
+    paint = colour() if paint is None else paint
+    cwd = os.getcwd()
+    home = os.path.expanduser("~")
+    where = "~" + cwd[len(home):] if cwd == home or cwd.startswith(home + "/") else cwd
+    d = DIM if paint else ""
+    r = RESET if paint else ""
+    b = BOLD if paint else ""
+    design = design_line(cwd)
+    rows = [
+        "",
+        f"{b}Welcome to onplatform!{r}",
+        f"{d}Designs that look native on iPhone, iPad, Mac and Android.{r}",
+        f"{d}Send /onplatform:start for help.{r}",
+        "",
+        f"{d}Directory:{r} {where}",
+        f"{d}Design:{r}    {design or 'none here yet'}" + (f"   {d}onplatform present{r}" if design else ""),
+        f"{d}Setup:{r}     {'done' if setup_done() else 'not yet, send /onplatform:setup'}",
+        "",
+    ]
+    print()
+    for line in logo(paint):
+        print("  " + line)
+    print()
+    for line in box(rows, paint):
+        print(line)
+    print()
+
+
+def plugin_installed():
+    for path in ("~/.claude/plugins/installed_plugins.json", "~/.claude/settings.json"):
+        try:
+            if '"onplatform@' in open(os.path.expanduser(path), encoding="utf-8").read():
+                return True
+        except OSError:
+            pass
+    return False
+
+
+def launch(args):
+    banner()
+    claude = shutil.which("claude")
+    if not claude:
+        print("Claude Code isn't on your PATH. Install it from https://claude.com/claude-code, then run onplatform again.")
+        return 1
+    argv = ["claude"] + ([] if plugin_installed() else ["--plugin-dir", ROOT]) + args
+    os.execv(claude, argv)
+
+
+# ----------------------------------------------------------- the present view
+SCREEN_RE = re.compile(r'data-(screen|sheet)-id="([^"]+)"')
+
+
+class Design:
+    def __init__(self, folder):
+        self.folder = os.path.abspath(folder)
+        html = open(os.path.join(self.folder, "index.html"), encoding="utf-8", errors="replace").read()
+        m = re.search(r"<title>\s*([^<]{1,60}?)\s*</title>", html, re.I)
+        self.name = m.group(1) if m else os.path.basename(self.folder)
+        seen, self.places = set(), []
+        for kind, ident in SCREEN_RE.findall(html):
+            if (kind, ident) not in seen:
+                seen.add((kind, ident))
+                self.places.append((kind, ident))
+        self.places.sort(key=lambda p: p[0] == "sheet")
+        text = ""
+        try:
+            text = open(os.path.join(self.folder, "DESIGN.md"), encoding="utf-8").read()
+        except OSError:
+            pass
+        kind, spatial = statusline.section(text, "Platform mode"), statusline.section(text, "Spatial model")
+        self.platform = statusline.PLATFORMS.get(kind, kind or "?")
+        self.layout = statusline.MODELS.get(spatial, spatial or "?")
+        m = re.search(r"--[\w-]*accent:\s*(#[0-9A-Fa-f]{6})|--md-sys-color-primary:\s*(#[0-9A-Fa-f]{6})",
+                      open(os.path.join(self.folder, "theme.css"), encoding="utf-8", errors="replace").read()
+                      if os.path.exists(os.path.join(self.folder, "theme.css")) else "")
+        self.brand = (m.group(1) or m.group(2)) if m else None
+        self.checks, self.checks_state = [], "not run"
+        cached = os.path.join(self.folder, ".visual-review", "checks.txt")
+        if os.path.exists(cached):
+            self.parse_checks(open(cached, encoding="utf-8").read())
+            self.checks_state = "from the last run"
+        self.taste = []
+        for name in ("taste.md", "TASTE.md"):
+            p = os.path.join(self.folder, ".visual-review", name)
+            if os.path.exists(p):
+                self.taste = [l.strip("-* ").strip() for l in open(p, encoding="utf-8") if l.strip()]
+                break
+
+    def shot(self, kind, ident, mode):
+        return os.path.join(self.folder, ".visual-review", "look", f"{mode}-{kind}-{ident}.png")
+
+    def parse_checks(self, out):
+        self.checks = []
+        for line in out.splitlines():
+            m = re.match(r"\s+(ok|FAIL|warn)\s+(.*)", line)
+            if m:
+                self.checks.append((m.group(1), re.sub(r"^index\.html:?\s*", "", m.group(2))))
+        m = re.search(r"(\d+)/(\d+) passed", out)
+        self.summary = m.group(0) if m else ""
+
+    def run_checks(self, done):
+        self.checks_state = "running…"
+        p = subprocess.run([sys.executable, os.path.join(ROOT, ".claude", "skills", "design-workflow",
+                                                         "check_design.py"), self.folder],
+                           capture_output=True, text=True)
+        os.makedirs(os.path.join(self.folder, ".visual-review"), exist_ok=True)
+        open(os.path.join(self.folder, ".visual-review", "checks.txt"), "w", encoding="utf-8").write(p.stdout)
+        self.parse_checks(p.stdout)
+        self.checks_state = "just now"
+        done()
+
+    def run_look(self, done):
+        subprocess.run([sys.executable, os.path.join(ROOT, ".claude", "skills", "design-workflow", "look.py"),
+                        self.folder], capture_output=True)
+        done()
+
+
+def image_protocol():
+    if os.environ.get("ONPLATFORM_IMAGES") in ("blocks", "iterm", "kitty"):
+        return os.environ["ONPLATFORM_IMAGES"]
+    if os.environ.get("TMUX"):
+        return "blocks"
+    term = os.environ.get("TERM_PROGRAM", "")
+    if os.environ.get("KITTY_WINDOW_ID") or "ghostty" in term.lower() or os.environ.get("TERM") == "xterm-kitty":
+        return "kitty"
+    if term in ("iTerm.app", "WezTerm"):
+        return "iterm"
+    return "blocks"
+
+
+def blocks(path, cols, rows):
+    """A screenshot as half-block characters, two pixels to a cell."""
+    try:
+        from PIL import Image
+    except ImportError:
+        return ["(install Pillow to see the screens here)"]
+    im = Image.open(path).convert("RGB")
+    h = rows * 2
+    w = max(1, min(cols, round(im.width * h / im.height)))
+    if w == cols:
+        h = round(im.height * w / im.width) // 2 * 2
+    im = im.resize((w, h), Image.LANCZOS)
+    px = im.load()
+    out = []
+    for y in range(0, h, 2):
+        out.append("".join(fg(px[x, y]) + bg(px[x, y + 1]) + "▀" for x in range(w)) + RESET)
+    return out
+
+
+def inline_image(path, cols, rows, proto):
+    import base64
+    data = base64.b64encode(open(path, "rb").read()).decode()
+    if proto == "iterm":
+        return f"\033]1337;File=inline=1;height={rows};preserveAspectRatio=1:{data}\a"
+    chunks, out = [data[i:i + 4096] for i in range(0, len(data), 4096)], ""
+    for i, c in enumerate(chunks):
+        more = 1 if i < len(chunks) - 1 else 0
+        head = f"a=T,f=100,r={rows},q=2," if i == 0 else ""
+        out += f"\033_G{head}m={more};{c}\033\\"
+    return out
+
+
+class Present:
+    def __init__(self, design):
+        self.d = design
+        self.sel = 0
+        self.mode = "light"
+        self.note = "j/k to move · d dark · c checks · l look · o open · q quit"
+        self.proto = image_protocol()
+        self.busy = False
+
+    # drawing ---------------------------------------------------------------
+    def panel(self, x, y, w, h, n, title, lines, active=False):
+        c = fg((126, 231, 135)) if active else fg((70, 78, 92))
+        t = fg((126, 231, 135))
+        buf = [f"{ESC}{y};{x}H{c}╭─{RESET}{t}[{n}] {title}{RESET}{c}{'─' * max(0, w - 6 - len(title) - len(str(n)))}╮{RESET}"]
+        for i in range(h - 2):
+            line = lines[i] if i < len(lines) else ""
+            vis = strip(line)
+            if len(vis) > w - 4:
+                line = vis[:w - 5] + "…"
+                vis = line
+            buf.append(f"{ESC}{y + 1 + i};{x}H{c}│{RESET} {line}{' ' * (w - 3 - len(vis))}{c}│{RESET}")
+        buf.append(f"{ESC}{y + h - 1};{x}H{c}╰{'─' * (w - 2)}╯{RESET}")
+        return "".join(buf)
+
+    def draw(self):
+        W, H = shutil.get_terminal_size((120, 40))
+        d = self.d
+        g, gr, y_, dim = fg((126, 231, 135)), fg((139, 148, 158)), fg((227, 179, 65)), fg((110, 118, 129))
+        left = max(30, min(40, W // 3))
+        out = [ESC + "2J"]
+        out.append(self.panel(1, 1, left, 6, 1, "Design", [
+            f"{BOLD}{d.name}{RESET}",
+            f"{gr}{d.platform} · {d.layout}{RESET}",
+            (fg(tuple(int(d.brand[i:i + 2], 16) for i in (1, 3, 5))) + "■ " + RESET + gr + d.brand + RESET)
+            if d.brand else f"{gr}no brand colour{RESET}",
+            f"{dim}{os.path.relpath(d.folder)}{RESET}"]))
+        sh = max(6, min(len(d.places) + 2, H - 22))
+        items = []
+        for i, (kind, ident) in enumerate(d.places):
+            label = ident.replace("-", " ").title() + (f" {dim}sheet{RESET}" if kind == "sheet" else "")
+            items.append((f"{ESC}48;2;31;58;42m" if i == self.sel else "") + f" {label} " + RESET)
+        out.append(self.panel(1, 7, left, sh, 2, "Screens", items, active=True))
+        ch = [f"{gr}{d.checks_state}{RESET}  {d.summary if d.checks else ''}"]
+        fails = [c for c in d.checks if c[0] == "FAIL"]
+        warns = [c for c in d.checks if c[0] == "warn"]
+        import textwrap
+        wrap = lambda mark, msg, n: [(mark if i == 0 else "  ") + " " + t for i, t in
+                                     enumerate(textwrap.wrap(msg, left - 6)[:n])]
+        for k, msg in fails[:3]:
+            ch += wrap(f"{fg((248, 81, 73))}✗{RESET}", msg, 3)
+        for k, msg in warns[:2]:
+            ch += wrap(f"{y_}!{RESET}", msg, 2)
+        if d.checks and not fails and not warns:
+            ch.append(f"{g}✓{RESET} everything passes")
+        if not d.checks:
+            ch.append(f"{dim}press c to run them{RESET}")
+        cy = 7 + sh
+        chh = max(5, min(len(ch) + 2, 16))
+        out.append(self.panel(1, cy, left, chh, 3, "Checks", ch))
+        ty = cy + chh
+        taste = [l for t in d.taste for l in wrap(f"{g}›{RESET}", t, 4)] or [f"{dim}the designer's verdict goes in{RESET}",
+                                                         f"{dim}.visual-review/taste.md{RESET}"]
+        out.append(self.panel(1, ty, left, max(4, H - ty - 1), 4, "Verdict", taste))
+
+        # the picture
+        px, pw, ph = left + 2, W - left - 2, H - 7
+        kind, ident = d.places[self.sel] if d.places else ("screen", "page")
+        title = f"{ident.replace('-', ' ').title()} — {self.mode}"
+        out.append(self.panel(px, 1, pw, ph, 0, title, []))
+        path = d.shot(kind, ident, self.mode)
+        if os.path.exists(path):
+            rows = ph - 3
+            if self.proto == "blocks":
+                art = blocks(path, pw - 6, rows)
+                x0 = px + 2 + max(0, (pw - 4 - len(strip(art[0]))) // 2)
+                for i, line in enumerate(art):
+                    out.append(f"{ESC}{2 + i};{x0}H{line}")
+            else:
+                self.pending = (path, rows, px + 2 + max(0, (pw - 4 - rows) // 2))
+        else:
+            out.append(f"{ESC}4;{px + 3}H{dim}No picture yet: press l to render every screen.{RESET}")
+        log = [self.note]
+        out.append(self.panel(px, ph + 1, pw, 5, 5, "Status", log))
+        keys = (f"{g}j/k{RESET} move  {g}d{RESET} dark  {g}enter/o{RESET} open in browser  "
+                f"{g}c{RESET} checks  {g}l{RESET} look  {g}q{RESET} quit")
+        out.append(f"{ESC}{H};2H{keys}")
+        sys.stdout.write("".join(out))
+        if self.proto != "blocks" and getattr(self, "pending", None):
+            path, rows, x0 = self.pending
+            sys.stdout.write(f"{ESC}2;{x0}H" + inline_image(path, pw - 6, rows, self.proto))
+            self.pending = None
+        sys.stdout.flush()
+
+    # running ---------------------------------------------------------------
+    def background(self, what, fn, note):
+        if self.busy:
+            return
+        self.busy = True
+        self.note = f"{what}…"
+
+        def done():
+            self.busy = False
+            self.note = note
+            self.draw()
+        threading.Thread(target=fn, args=(done,), daemon=True).start()
+
+    def key(self, k):
+        n = len(self.d.places)
+        if k in ("q", "\x03"):
+            return False
+        if k in ("j", "\x1b[B") and n:
+            self.sel = (self.sel + 1) % n
+        elif k in ("k", "\x1b[A") and n:
+            self.sel = (self.sel - 1) % n
+        elif k == "d":
+            self.mode = "dark" if self.mode == "light" else "light"
+        elif k == "c":
+            self.background("Running the checks", self.d.run_checks, "Checks done.")
+        elif k == "l":
+            self.background("Rendering every screen", self.d.run_look, "Every screen rendered.")
+        elif k in ("o", "\r", "\n"):
+            url = "file://" + os.path.join(self.d.folder, "index.html")
+            opener = "open" if sys.platform == "darwin" else "xdg-open"
+            if shutil.which(opener):
+                subprocess.Popen([opener, url], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                self.note = "Opened in your browser."
+            else:
+                self.note = url
+        return True
+
+    def run(self):
+        import termios
+        import tty
+        fd = sys.stdin.fileno()
+        old = termios.tcgetattr(fd)
+        sys.stdout.write("\033[?1049h\033[?25l")
+        try:
+            tty.setcbreak(fd)
+            self.draw()
+            while True:
+                k = os.read(fd, 8).decode(errors="ignore")
+                if not self.key(k):
+                    break
+                self.draw()
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old)
+            sys.stdout.write("\033[?25h\033[?1049l")
+            sys.stdout.flush()
+
+
+def present(args):
+    folder = args[0] if args else ("design" if os.path.isdir("design") else ".")
+    if not os.path.exists(os.path.join(folder, "index.html")):
+        print(f"No design in {folder}: there's no index.html. Give the design folder, e.g. onplatform present ./design")
+        return 1
+    d = Design(folder)
+    if not sys.stdin.isatty():
+        print(f"{d.name}: {d.platform} · {d.layout} · {len(d.places)} screens and sheets")
+        return 0
+    view = Present(d)
+    if not d.checks:
+        view.background("Running the checks", d.run_checks, "Checks done.")
+    view.run()
+    return 0
+
+
+def main():
+    args = sys.argv[1:]
+    if args and args[0] == "present":
+        return present(args[1:])
+    if args and args[0] == "banner":
+        banner()
+        return 0
+    if args and args[0] in ("-h", "--help", "help"):
+        print(__doc__.split("\n\n")[1])
+        return 0
+    return launch(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)

@@ -54,6 +54,27 @@ def statusline_command():
     return (f'python3 "$(ls -d {b}/*/skills/setup/statusline.py 2>/dev/null | sort -V | tail -1)"')
 
 
+COMMAND = os.path.join(os.path.expanduser("~"), ".local", "bin", "onplatform")
+
+
+def command_script():
+    """A wrapper that runs whichever version is installed."""
+    b, root = base(), os.path.realpath(ROOT)
+    target = (f'"{root}/bin/onplatform"' if b == root else
+              f'"$(ls -d {b}/*/bin/onplatform 2>/dev/null | sort -V | tail -1)"')
+    return f"#!/bin/sh\n# onplatform's terminal command, written by /onplatform:setup\nexec python3 {target} \"$@\"\n"
+
+
+def command_state():
+    """'ours', 'theirs' (something else is there) or None."""
+    if not os.path.exists(COMMAND):
+        return None
+    try:
+        return "ours" if "written by /onplatform:setup" in open(COMMAND, encoding="utf-8").read() else "theirs"
+    except (OSError, UnicodeDecodeError):
+        return "theirs"
+
+
 def ours(settings):
     cmd = (settings.get("statusLine") or {}).get("command", "")
     return "statusline.py" in cmd and "onplatform" in cmd
@@ -76,6 +97,7 @@ def main():
     ap.add_argument("--apply", action="store_true")
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--statusline", action="store_true", help="also set the status line")
+    ap.add_argument("--command", action="store_true", help="also put the onplatform command in ~/.local/bin")
     a = ap.parse_args()
     try:
         settings = load()
@@ -93,9 +115,16 @@ def main():
                   + json.dumps(settings["statusLine"].get("command", settings["statusLine"])))
         else:
             line = {"type": "command", "command": statusline_command(), "padding": 0}
+    cmd = None
+    if a.command:
+        state = command_state()
+        if state == "theirs":
+            print(f"Kept {COMMAND}, which isn't onplatform's.")
+        elif state is None:
+            cmd = command_script()
     if a.check:
         return 0 if not todo else 1
-    if not todo and not line:
+    if not todo and not line and not cmd:
         print(f"Already set up: everything is in {SETTINGS}.")
         return 0
     if not a.apply:
@@ -104,6 +133,18 @@ def main():
             print("\n".join("  " + r for r in todo))
         if line:
             print(f"Would set statusLine in {SETTINGS} to:\n  {line['command']}")
+        if cmd:
+            print(f"Would add the onplatform command at {COMMAND}")
+        return 0
+    if cmd:
+        os.makedirs(os.path.dirname(COMMAND), exist_ok=True)
+        with open(COMMAND, "w", encoding="utf-8") as fh:
+            fh.write(cmd)
+        os.chmod(COMMAND, 0o755)
+        print(f"Added the onplatform command at {COMMAND}.")
+        if os.path.dirname(COMMAND) not in os.environ.get("PATH", "").split(os.pathsep):
+            print("  ~/.local/bin isn't on your PATH yet; add it to use the command by name.")
+    if not todo and not line:
         return 0
     if os.path.exists(SETTINGS):
         shutil.copy2(SETTINGS, SETTINGS + ".onplatform-backup")

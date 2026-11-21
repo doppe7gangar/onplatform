@@ -219,6 +219,17 @@ def main():
            json.load(open(sp))["statusLine"]["command"] == "my-own-line" and "Kept your status line" in p.stdout,
            p.stdout)
 
+    p = subprocess.run([sys.executable, allow, "--apply", "--command"], capture_output=True, text=True, env=env)
+    wrapper = os.path.join(home, ".local", "bin", "onplatform")
+    expect("--command writes the onplatform command", os.access(wrapper, os.X_OK), p.stdout)
+    p = subprocess.run([wrapper, "banner"], capture_output=True, text=True, env=dict(env, NO_COLOR="1"))
+    expect("which prints the logo and the welcome box",
+           p.returncode == 0 and "Welcome to onplatform!" in p.stdout and "╰" in p.stdout, p.stdout + p.stderr)
+    open(wrapper, "w").write("#!/bin/sh\necho mine\n")
+    p = subprocess.run([sys.executable, allow, "--apply", "--command"], capture_output=True, text=True, env=env)
+    expect("someone else's onplatform command is never replaced",
+           open(wrapper).read() == "#!/bin/sh\necho mine\n" and "Kept" in p.stdout, p.stdout)
+
     print("status line, welcome card and output style:")
     line = os.path.join(ROOT, "skills", "setup", "statusline.py")
     proj = tempfile.mkdtemp(prefix="onp-line-")
@@ -250,6 +261,10 @@ def main():
            and len({len(r) for r in rows}) == 1 and "iPhone · tab bar · Pantry" in p.stdout, p.stdout)
     p = subprocess.run([sys.executable, line], input="not json", capture_output=True, text=True)
     expect("bad input still prints a line", p.returncode == 0 and "onplatform" in p.stdout, p.stderr)
+    p = subprocess.run([sys.executable, os.path.join(ROOT, "bin", "onplatform"), "present",
+                        os.path.join(proj, "design")], capture_output=True, text=True, stdin=subprocess.DEVNULL)
+    expect("onplatform present names the design when there's no terminal to draw in",
+           p.returncode == 0 and "iPhone · tab bar" in p.stdout, p.stdout + p.stderr)
     shutil.rmtree(proj, ignore_errors=True)
     shutil.rmtree(home, ignore_errors=True)
     style = open(os.path.join(ROOT, "output-styles", "onplatform.md"), encoding="utf-8").read()
