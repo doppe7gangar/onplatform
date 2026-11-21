@@ -14,6 +14,9 @@
  *   data-toggle           flip aria-pressed, or aria-checked on role=switch
  *   data-toast="Saved"    show a short confirmation banner
  *   data-item="plants.fig"  the record the opened screen fills from (below)
+ *   data-island="compact" on the status bar's island shows a Live Activity;
+ *                         a tap opens its .ios-island__expanded part, and a
+ *                         tap anywhere else closes it again
  *
  * Screens and sheets are hidden with the hidden attribute until opened.
  * A plain script, not a module: the design opens straight from a file,
@@ -243,5 +246,22 @@
       el.setAttribute(attr, String(el.getAttribute(attr) !== "true"));
     }
     if (el.hasAttribute("data-toast")) toast(el.getAttribute("data-toast"));
+  });
+
+  // A Live Activity: tap the island to expand it, tap elsewhere to close.
+  document.addEventListener("click", function (event) {
+    var open = document.querySelectorAll('.ios-statusbar__island[data-island="expanded"]');
+    var island = event.target.closest(".ios-statusbar__island[data-island]");
+    for (var i = 0; i < open.length; i++) {
+      if (open[i] !== island) open[i].setAttribute("data-island", open[i].getAttribute("data-island-rest") || "compact");
+    }
+    if (!island || island.getAttribute("data-island") === "expanded") {
+      if (island) island.setAttribute("data-island", island.getAttribute("data-island-rest") || "compact");
+      return;
+    }
+    if (island.querySelector(".ios-island__expanded")) {
+      island.setAttribute("data-island-rest", island.getAttribute("data-island"));
+      island.setAttribute("data-island", "expanded");
+    }
   });
 })();

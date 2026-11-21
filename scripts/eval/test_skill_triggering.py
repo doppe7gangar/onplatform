@@ -63,6 +63,14 @@ DEFAULT_CASES = [
     {"query": "my swiftui sheet slides up with a linear 0.3s animation and it feels "
               "dead. how should it move",
      "expect": "motion-for-apple-platforms"},
+    # Android has its own kit; it should win over the Apple skills. A whole
+    # Android app is a product, so design-workflow starts it and brings the kit in.
+    {"query": "we need the android version of our recipe app, same screens as the iphone "
+              "one but it should feel like a pixel app",
+     "expect": "design-workflow"},
+    {"query": "what height should a material 3 top app bar be and what colour role does "
+              "it turn when content scrolls under it",
+     "expect": "ui-kit-for-android"},
     # Near-misses: Apple-adjacent but not UI design. A skill that fires here is
     # interrupting work it can't help with, which is its own kind of failure.
     {"query": "xcode 26 keeps failing my archive with 'no profiles for com.acme.app "
@@ -80,7 +88,9 @@ def make_project():
     os.makedirs(dst)
     installed = []
     for d in sorted(os.listdir(SKILLS_SRC)):
-        if d.startswith("apple-"):
+        # Every skill the repo ships. This once matched an "apple-" prefix,
+        # which no skill has carried since the rename, so it installed none.
+        if os.path.isfile(os.path.join(SKILLS_SRC, d, "SKILL.md")):
             shutil.copytree(os.path.join(SKILLS_SRC, d), os.path.join(dst, d))
             installed.append(d)
     return root, installed
@@ -154,23 +164,28 @@ def main():
     ap.add_argument("--model", default=DEFAULT_MODEL)
     ap.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT)
     ap.add_argument("--workers", type=int, default=3)
+    ap.add_argument("--runs", type=int, default=1,
+                    help="ask each query this many times; one answer is a coin toss")
     args = ap.parse_args()
 
     cases = json.load(open(args.cases)) if args.cases else DEFAULT_CASES
-    installed = [d for d in sorted(os.listdir(SKILLS_SRC)) if d.startswith("apple-")]
+    installed = [d for d in sorted(os.listdir(SKILLS_SRC))
+                 if os.path.isfile(os.path.join(SKILLS_SRC, d, "SKILL.md"))]
     print(f"installing {len(installed)} skills per case: {', '.join(installed)}\n")
 
+    # Keyed by position, not query, so a repeated query keeps every answer.
+    cases = [c for c in cases for _ in range(args.runs)]
     results = {}
     with cf.ThreadPoolExecutor(max_workers=args.workers) as ex:
-        futs = {ex.submit(run_case, c, args.model, args.timeout): c for c in cases}
+        futs = {ex.submit(run_case, c, args.model, args.timeout): i for i, c in enumerate(cases)}
         for f in cf.as_completed(futs):
-            results[futs[f]["query"]] = f.result()
+            results[futs[f]] = f.result()
 
     good = 0
-    for c in cases:
-        got = results[c["query"]]
+    for i, c in enumerate(cases):
+        got = results[i]
         expect = c["expect"]
-        fired = [g for g in got if g.startswith("apple-")]
+        fired = [g for g in got if g.split(":")[-1] in installed]
         if expect is None:
             ok = not fired
         else:

@@ -66,8 +66,9 @@ puts back what you had; `--checks` also installs Playwright, which lets the
 skills screenshot and check their designs. A newer release comes with its
 own installer: download that one the same way.
 
-Use one or the other: with both, every skill loads twice. To move from the
-installer to the plugin, run `bash install.sh --rollback` first.
+Use one or the other: with both, every skill loads twice, so the installer
+stops if it finds the plugin installed. To move from the installer to the
+plugin, run `bash install.sh --rollback` first.
 
 No Claude Code yet? Run `curl -fsSL https://claude.ai/install.sh | bash` first.
 
@@ -155,15 +156,42 @@ what you ask; the commands are for when you know which step you want.
 
 | Command | What it does |
 |---|---|
+| `/onplatform:start` | Start here: a welcome card with the design in this folder, whether setup and the output style are on, and three things to try |
 | `/onplatform:design <what you want>` | A brief to a working, checked prototype: settle the screens, scaffold, build, check in a browser, render and review |
 | `/onplatform:check [folder]` | Every mechanical check on a design (taps, states, contrast, use of the kit, licences, the largest text, right to left, long text), fixed until it passes |
-| `/onplatform:review [files]` | A review of SwiftUI, UIKit, AppKit or a design against the HIG: violations, guidance and judgment, each linked to Apple's page |
+| `/onplatform:review [files]` | A review of SwiftUI, UIKit or AppKit against the HIG, Compose or Android layouts against Material 3, or a design against its platform: violations, guidance and judgment, each linked to its page |
 | `/onplatform:ask <question>` | The answer from Apple's page itself, with the link, each figure's platform, and quotes checked word for word |
 | `/onplatform:figma [folder]` | Every screen and state into Figma, light and dark |
 | `/onplatform:handoff [design] [app]` | The design into SwiftUI, checked for anything lost on the way |
 | `/onplatform:preview [folder]` | A live preview of a design that reloads itself as it changes; `--phone` to open it on a phone on the same network |
 | `/onplatform:store [folder]` | App Store and Google Play screenshots at the stores' sizes, captioned on the brand colour or bare, checked for size and alpha |
+| `/onplatform:setup` | Adds two narrow rules to your settings so the skills read their own files and run their own scripts without asking each time, and, if you want it, onplatform's status line |
 | `/onplatform:ship [folder]` | Ready to publish: it won't call a design ready while it carries SF Pro, SF Symbols or a file without its licence |
+
+**The `onplatform` command.** `/onplatform:setup` can put a command in
+`~/.local/bin`. `onplatform` opens Claude Code under the onplatform logo
+and a welcome box that says where you are and what you're designing.
+After a design, `onplatform present design` shows it full screen, the way
+Lazygit lays out a repository: the screens on the left with their checks
+and the designer's verdict, and a picture of the selected screen on the
+right (`j`/`k` to move, `d` for dark, `o` to open it in the browser). The
+picture is the real screenshot in iTerm2, WezTerm, kitty and Ghostty, and
+drawn in block characters elsewhere.
+
+**onplatform mode.** Run `/output-style onplatform:onplatform` and every reply
+talks like a designer: the verdict first, the rule with its number and
+platform, the fix, one footer line. Code still gets written as usual.
+`/onplatform:setup` can also add a two-line status line that says where
+you are and what you're designing, read from the design folder you're in,
+with the model and how full the context is underneath:
+
+```
+◆ onplatform  ~/plants  ·  iPhone · tab bar · Thirsty  /onplatform:check
+Opus 5 · context: 6%
+```
+
+The diamond is filled while the output style is on. It never replaces a
+status line you already have.
 
 **A designer to talk to.** Start a whole session as the plugin's designer,
 in an empty folder:
@@ -182,13 +210,18 @@ text, has the design critic review it and fixes what comes back, at most
 twice, then hands it over. In an ordinary session, Claude hands design
 work to it on its own, or ask for it: `@agent-onplatform:designer`.
 
-Two more agents take the reading-heavy work into their own context, so your
+Three more agents take the reading-heavy work into their own context, so your
 conversation stays on the design. Claude hands work to them when it fits,
 or ask for one by name, e.g. `@agent-onplatform:reviewer look at SettingsView.swift`:
 
 - **`onplatform:reviewer`** reviews code or a design against the HIG, reading
   Apple's pages, and returns findings sorted into violations, guidance and
   judgment. It doesn't edit anything.
+- **`onplatform:android-reviewer`** does the same for Android: Jetpack Compose,
+  Android XML layouts or an Android design, held against the sizes, colour
+  roles and type measured from Google's Material 3 Design Kit, with Material
+  Symbols names checked and Apple chrome flagged. It doesn't edit anything
+  either.
 - **`onplatform:design-critic`** renders a design, holds each screen against the
   platform's own example screens, and ranks what most gives it away as not
   native.
@@ -196,12 +229,13 @@ or ask for one by name, e.g. `@agent-onplatform:reviewer look at SettingsView.sw
 Two checks run by themselves:
 
 - **After Claude writes or edits a `.swift` file**, `check_swiftui.py` runs
-  on it and the violations go straight back to Claude to fix.
+  on it and the violations go straight back to Claude to fix. A Jetpack
+  Compose `.kt` file gets the same from `check_compose.py`, against Material 3.
 - **Before `git commit` or `git push`**, every design in the repository is
   checked, and the command is stopped if SF Pro, SF Symbols or Apple's
   images would go along with it.
 
-To turn either off, set `ONPLATFORM_SWIFTUI_HOOK` or `ONPLATFORM_COMMIT_GUARD` to `off`
+To turn one off, set `ONPLATFORM_SWIFTUI_HOOK`, `ONPLATFORM_COMPOSE_HOOK` `ONPLATFORM_COMMIT_GUARD` to `off`
 in the `env` of `~/.claude/settings.json`.
 
 ### In your own CI
@@ -345,6 +379,8 @@ python3 ~/.claude/skills/ui-kit-for-android/build_m3_theme.py "#C1552E" --format
 |---|---|
 | `.claude/skills/` | The five skills above, each with its own `SKILL.md` |
 | `skills/`, `agents/`, `hooks/` | The plugin's commands, agents and automatic checks |
+| `output-styles/` | onplatform's output style, for `/output-style` |
+| `bin/onplatform` | The terminal command: the logo and welcome box, and `present` |
 | `.claude-plugin/` | The plugin and its marketplace, for `/plugin install` |
 | `action.yml` | The GitHub Action |
 | `scripts/` | The token builders and the checks |

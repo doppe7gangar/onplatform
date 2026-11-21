@@ -1,5 +1,5 @@
 ---
-description: Serve a design folder as a live preview that reloads itself whenever the design changes, in a browser or on a phone on the same network.
+description: Serve a design as a live preview that reloads as it changes
 argument-hint: "[design folder] [--phone]"
 disable-model-invocation: true
 ---

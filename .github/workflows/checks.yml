@@ -62,6 +62,9 @@ jobs:
       - name: SwiftUI checker
         run: python scripts/eval/test_check_swiftui.py
 
+      - name: Compose checker
+        run: python scripts/eval/test_check_compose.py
+
       - name: Quote checker
         run: python scripts/eval/test_check_quotes.py
 
@@ -85,6 +88,18 @@ jobs:
 
       - name: App Store screenshots
         run: python scripts/eval/test_store_screenshots.py
+
+      - name: What a SwiftUI handoff lost
+        run: python scripts/eval/test_check_handoff.py
+
+      - name: SF Symbol names
+        run: python scripts/eval/test_sf_symbols.py
+
+      - name: Design grammar from an implementation
+        run: python scripts/eval/grammar_audit_smoke.py
+
+      - name: The rebuilt workflow's contract
+        run: python scripts/eval/rebuild_contract_regression.py
 
       - name: Third-party licences
         run: |

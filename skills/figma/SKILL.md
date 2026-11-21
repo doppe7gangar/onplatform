@@ -1,5 +1,5 @@
 ---
-description: Send a design to Figma, one frame for every screen and state in light and dark, through Figma's MCP server.
+description: Send every screen and state of a design to Figma, light and dark
 argument-hint: "[design folder]"
 disable-model-invocation: true
 ---

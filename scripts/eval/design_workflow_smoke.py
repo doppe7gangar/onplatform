@@ -649,9 +649,19 @@ def test_content_and_brand(tmp):
         out = run([sys.executable, CHECK, project], expect=1).stdout
         if "the brand colour #C1552E is" not in out or "not in the design" not in out:
             raise RuntimeError("a design that never shows its brand colour was not called out:\n" + out)
+        if "carry hero art" in out or "is wallpaper" in out:
+            raise RuntimeError("restraint flagged the plain scaffold:\n" + out)
+        # The Thirsty failure: every item wearing the hero's gradient art.
+        tile = ('<a class="ios-hero"><div class="ios-art"></div>'
+                '<p class="ios-hero__title">Item</p></a>')
+        loud = original.replace('<a class="ios-card"', tile * 4 + '<a class="ios-card"', 1)
+        open(page, "w", encoding="utf-8").write(loud)
+        out = run([sys.executable, CHECK, project], expect=1).stdout
+        if "carry hero art" not in out:
+            raise RuntimeError("hero art on every item was not called out:\n" + out)
     finally:
         open(page, "w", encoding="utf-8").write(original)
-    print("ok a design of lists alone, or one hiding its brand colour, fails")
+    print("ok a design of lists alone, one hiding its brand colour, or one wearing hero art everywhere, fails")
 
 
 def test_render_review(project):

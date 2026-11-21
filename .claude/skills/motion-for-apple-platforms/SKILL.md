@@ -1,6 +1,6 @@
 ---
 name: motion-for-apple-platforms
-description: How Apple interfaces move — SwiftUI's spring vocabulary (.smooth, .snappy, .bouncy) and when each applies, interruptible and gesture-driven transitions, hero/continuity transitions between screens, microinteractions and haptic pairing, and honouring Reduce Motion. Use when animating anything meant to feel Apple-like, on any platform: a SwiftUI transition, a CSS or Framer Motion animation on the web, a sheet or modal presentation, a button press, a loading or success state, or when a UI is technically correct but feels stiff, floaty, or laggy. Also use when reviewing motion that overshoots, bounces where it shouldn't, or can't be interrupted mid-flight. For Apple's rules on *whether* to animate at all, use hig-guide; for colour, type and control geometry, use ui-kit-for-apple-platforms.
+description: How Apple interfaces move: SwiftUI springs (.smooth, .snappy, .bouncy) and when each fits, interruptible and gesture-driven transitions, hero transitions, microinteractions with haptics, and Reduce Motion. Use when animating anything meant to feel Apple-like on any platform (SwiftUI, CSS, Framer Motion, a sheet, a button press, a loading or success state), or when motion feels stiff, floaty, laggy or overshoots. Whether to animate at all: hig-guide; colour and geometry: ui-kit-for-apple-platforms.
 ---
 
 # Apple motion
@@ -16,6 +16,14 @@ movement is actually built lives outside it, which is why this exists.
 | `references/microinteractions-feedback.md` | Press states, loading, success and error feedback, haptic pairing. |
 | `references/gestures-interaction.md` | Swipe, drag, pinch, edge gestures and how motion should track them. |
 
+
+## The answer's shape
+
+Answer a motion question the way a designer would at a desk: the verdict
+in bold first ("Use `.snappy`.", "Too bouncy."), one sentence on why, the
+code in six lines or fewer, and one footer line for Reduce Motion and
+the other platforms, separated by ` · `. About ten lines; no headings, no
+closing offer.
 ## Where each thing comes from
 
 Worth being blunt about, because the three sources have very different

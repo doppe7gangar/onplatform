@@ -1,6 +1,6 @@
 ---
 name: ui-kit-for-apple-platforms
-description: Apple's iOS 27, iPadOS 27 and macOS 27 design values (colour, type, control geometry, states) measured from Apple's own design kits, with ready recipes: CSS custom properties and component classes (navigation and tab bars, grouped lists, sheets, alerts, buttons, switches, segmented controls, sliders, empty states, Liquid Glass), accessible React components, a Tailwind v4/v3 theme, iPad split views, Mac windows, and tokens for SwiftUI, Jetpack Compose, Android XML, Flutter and React Native. Use whenever UI should look like Apple's where no system palette can be asked: a web app, landing page, dashboard, React/Vue/Svelte component, an iPad or Mac mockup, a Flutter or React Native app, a design system; whenever someone says "make it look like Apple", "iOS style" or "Apple aesthetic"; and when Apple-like UI gets details wrong. The values are measured, not remembered: the accent is #0088FF, not the #007AFF found online. For which control to use, how layouts adapt, and native SwiftUI/UIKit/AppKit work, use hig-guide.
+description: Apple's iOS, iPadOS and macOS 27 design values (colour, type, control geometry) measured from Apple's design kits, as CSS tokens and components (bars, grouped lists, sheets, alerts, controls, Liquid Glass), React components, a Tailwind theme, iPad split views, Mac windows, and tokens for SwiftUI, Compose, Flutter and React Native. Use whenever UI should look like Apple's where no system palette exists: a web app, landing page, dashboard, React component, iPad or Mac mockup, design system, or "make it look like Apple" / "iOS style". The accent is #0088FF, not #007AFF. Which control to use and native code: hig-guide.
 ---
 
 # Apple UI for the web
@@ -37,7 +37,14 @@ trust the ones that don't overlap.
 | `ipad-example.html` | Three iPads — a split view with a popover, tabs at the top, a sheet — light and dark. `verify_ipad_ui.py` measures it. |
 | `react/` | **React components** over the recipes (`ios.jsx`, types in `ios.d.ts`, `ios-react.css`), with the keyboard and screen-reader behaviour the static recipes can't have. `example.jsx` uses every one. |
 | `tailwind/` | **Tailwind themes**: `theme.css` for v4, `preset.cjs` for v3. Utilities such as `bg-ios-accent`, `rounded-ios-card` and `ios-text-body` that read the kit's variables. |
+| `references/` | **Read when the target needs it**: `macos.md`, `ipados.md`, `react.md`, `tailwind.md`, `liquid-glass.md`, `typography.md`, `beyond-the-recipes.md`. |
 | `ui-kit-tokens.json` | **Every measurement**, 945 renderings × colours + geometry + state. Query it for anything the recipes don't cover. |
+
+Everything named here is in this skill's folder, `${CLAUDE_SKILL_DIR}`.
+Search the tokens and recipes with the Grep tool and open them with Read. Run a script
+as one plain command, `python3 ${CLAUDE_SKILL_DIR}/sf_icons.py ./design`, with no `cd`,
+pipe or `2>&1` around it: one approval then covers it for good, where a
+compound command asks again every time.
 
 ## Picking a target
 
@@ -92,6 +99,26 @@ custom buttons inside rows, shadows under cards, gradients on cards and
 buttons, coloured section backgrounds, and icons typed as characters or
 emoji. `check_design.py` fails the last one.
 
+## The Dynamic Island and Live Activities
+
+The status bar's island is drawn at Apple's size: 125.33 x 36.67pt at
+rest, 11pt from the top, centred. When the app has something running (a
+timer, a delivery, a round of tasks), show it as a Live Activity by
+putting `data-island` on the island, in one of Apple's three
+presentations, at the HIG's sizes:
+
+- `compact`: 230pt wide (250pt with `ios-statusbar--max`), with
+  `ios-island__leading` and `ios-island__trailing` at 52.33pt (62.33pt)
+  either side of the camera.
+- `minimal`: `ios-island__minimal`, a 36.67 to 45pt circle beside the
+  island, for a second activity.
+- `expanded`: `ios-island__expanded` with `data-region` leading, center,
+  trailing and bottom, 371pt (408pt) wide, 84 to 160pt tall, 44pt
+  corners. prototype.js opens it on a tap of the island.
+
+Only show one when the product really has a live task; a static app with
+an island full of content reads as a gimmick.
+
 ## Content first: what Apple's own apps open on
 
 Those four screens are the system's chrome and its lists, and an app
@@ -140,119 +167,11 @@ design for Android, the web or a marketing site gets none. design-workflow's
 
 ## macOS
 
-`macos-components.css` is the Mac's counterpart to the iOS recipes,
-self-contained, and measured from Apple's macOS 27 design kit for Figma:
-each corner, padding, row height and colour is the value Apple's own
-components carry. Where the kit blends a translucent material over what
-is behind it (the sidebar, menus, alerts), the stylesheet gives what that
-blend renders over the surface it normally sits on. Values the kit
-doesn't carry say so in the stylesheet.
-
-What comes out of it, and what people get wrong from memory:
-
-- **Windows** and sheets have 16pt corners. The traffic lights are
-  **14pt circles 9pt apart** (a 23pt pitch), 19pt in from the window's
-  edge and centred in the 52pt toolbar band. Not 12 on 20; that is the
-  old Mac.
-- **Toolbars** are a 52pt band whose controls are 36pt glass capsules
-  holding 28pt buttons. A pressed or selected one is a grey capsule, not
-  an accent fill.
-- **Sidebars** are 240pt wide and run to the top of the window under
-  the traffic lights. Rows are 32pt; a selected row is a **grey pill**
-  with 8pt corners, inset 10pt. Icons are in the accent; the text keeps
-  its colour. Section headers are 13pt bold grey.
-- **Every regular control is 24pt**: push button, pop-up, text and
-  search field, segmented control. Push buttons are **rectangles with
-  6pt corners**, not capsules. Control text is SF Pro **Medium (510)**.
-  A switch is 54×24 with a 32×20 capsule knob.
-- **Text is 13pt**, not iOS's 17. Use the `--mac-text-*` styles, and
-  `--mac-text-control` on anything clickable.
-- A highlighted **menu** item is **#0069F9**, a selected **table** row
-  **#0165E2**, both with white text: neither is the accent. Menus have
-  12pt corners and 24pt rows; tables 20pt rows.
-- An **alert** is 260pt wide with 34pt corners, a 13pt bold title over
-  an 11pt message, left aligned, and 28pt capsule buttons stacked full
-  width.
-
-```html
-<link rel="stylesheet" href="macos-components.css">
-
-<div class="mac-desktop">
-  <div class="mac-window">
-    <div class="mac-lights"><span></span><span></span><span></span></div>
-    <nav class="mac-sidebar">
-      <div class="mac-sidebar__header">Library</div>
-      <a class="mac-sidebar__item" aria-current="page">
-        <span class="mac-sidebar__icon" data-sf-symbol="clock">…</span>Recents</a>
-    </nav>
-    <div class="mac-main">
-      <header class="mac-toolbar">
-        <h1 class="mac-toolbar__title">Recents<span class="mac-toolbar__subtitle">24 documents</span></h1>
-        <span class="mac-toolbar__spacer"></span>
-        <button class="mac-tool" aria-label="New Document" data-sf-symbol="plus">…</button>
-      </header>
-      <main class="mac-content">…</main>
-    </div>
-  </div>
-</div>
-```
-
-The accent is the HIG's system blue, or the brand when a `theme.css`
-from design-workflow bridges one in; the bridge fills the selections and
-the menu highlight with it too. Set `--mac-accent` to change it by hand,
-with `--mac-selection` and `--mac-menu-highlight` if those should follow.
-The Mac kit's verifier, `python3 verify_mac_ui.py`, measures
-`mac-example.html` against all of this in 87 checks. For a whole Mac app, design-workflow's
-`new_project.py --kind macos` scaffolds the window.
-
-**Content first on the Mac.** `macos-components.css` has the same
-content parts at Mac sizes -- `mac-hero` with `mac-art`, `mac-card`,
-`mac-metric`, `mac-ring`, `mac-bars`, `mac-badge`, `mac-stats`,
-`mac-tiles`, `mac-sectionhead`, and `mac-summary` to set a hero beside
-two cards -- for an app about its content (Music, Weather, Home) rather
-than about managing files. They take `--tint` and the `mac-tint-*`
-classes the same way. On iPad, use the iOS parts: `ipados-components.css`
-loads with `ios-components.css`.
+Read `references/macos.md` for macOS: the window, sidebar, toolbar and controls.
 
 ## iPadOS
 
-An iPad app is not a big iPhone. `ipados-components.css` carries the
-iPadOS 27 shapes from Apple's iOS and iPadOS 27 design kit, on top of the
-iPhone recipes:
-
-- **The frame**: iPad Pro 11-inch, 1210 x 834 with 30pt screen corners; under 1300px wide (an actual iPad) the frame drops away.
-- **Status bar**: 32pt, 16pt in, 14pt medium — the time, the date, then the app's menu, its name in bold.
-- **Split view**: a 320pt Liquid Glass sidebar (#DADADA as the kit renders it; #EFEFEF when the window is inactive) starting under the status bar, 10pt in. Its toolbar is an Edit capsule and 44pt glass circles; under it a 44pt search capsule in Fills/Secondary, then 44pt rows: a 34pt symbol column in the accent, the title in body, detail in the vibrant secondary label. The selected row is a full-width capsule; section headers sit 21pt above and 11pt below in the secondary label.
-- **Toolbar**: no bar. Glass controls float 10pt in under the status bar — one symbol is a 44pt circle, a group puts symbols on a 56pt pitch — with the large title, 34/41 bold, and an optional 15pt medium subtitle below, both vibrant. Content scrolling under them brings in the scroll edge effect.
-- **Tabs at the top**: iPadOS puts the tab bar at the top centre — a glass capsule with 4pt around 36pt tabs in 15pt medium, the selected one on the neutral capsule in the accent, a 54pt sidebar toggle leading and search trailing. Never the iPhone's bottom tab bar.
-- **Sheets** float centred under the status bar, 936pt wide, with 38pt corners, a 60 x 4 grabber and the window dimmed 20%. **Popovers** share the 38pt corners and point a 56 x 13 arrow at their source.
-
-```html
-<link rel="stylesheet" href="tokens/ios-tokens.css">
-<link rel="stylesheet" href="ios-components.css">
-<link rel="stylesheet" href="ipados-components.css">
-
-<div class="ipad">
-  <div class="ipad-statusbar">…<span class="ipad-statusbar__app">Mail</span>…</div>
-  <div class="ipad-split">
-    <nav class="ipad-sidebar">
-      <a class="ipad-sidebar__row" aria-current="page">
-        <span class="ipad-sidebar__icon" data-sf-symbol="tray">…</span>
-        <span class="ipad-sidebar__title">Inbox</span></a>
-    </nav>
-    <main class="ipad-content">
-      <header class="ipad-toolbar">
-        <div class="ipad-toolbar__controls">…</div>
-        <div class="ipad-title"><h1>Inbox</h1></div>
-      </header>
-    </main>
-  </div>
-</div>
-```
-
-The iPad kit's verifier, `python3 verify_ipad_ui.py`, measures
-`ipad-example.html` against all of this in 67 checks. For a whole iPad
-app, design-workflow's `new_project.py --kind ipados` scaffolds it.
+Read `references/ipados.md` for iPadOS: the split view, sidebar, top tab bar, sheets and popovers.
 
 ## Using it
 
@@ -310,75 +229,11 @@ recipes are plain classes with no JS.
 
 ### React
 
-`react/ios.jsx` renders the recipes' markup and adds what a static page
-can't: a sheet that opens on its first field, keeps Tab inside, closes
-on Escape and gives focus back to what opened it; an alert that starts
-on Cancel; tabs that follow the arrow keys; switches named by their row;
-tappable rows that are real buttons, named "title, value". Copy it with
-the kit:
-
-```bash
-cp -R <this skill's directory>/{tokens,fonts,ios-components.css,react} ./src/ios/
-```
-
-```jsx
-import "./ios/tokens/ios-tokens.css";
-import "./ios/ios-components.css";
-import "./ios/react/ios-react.css";
-import { NavBar, LargeTitle, List, Row, Switch, Sheet, useCollapsed } from "./ios/react/ios.jsx";
-
-<NavBar title="Settings" collapsed={useCollapsed()} />
-<LargeTitle>Settings</LargeTitle>
-<List header="Reminders">
-  <Row title="Daily nudge" accessory={<Switch checked={on} onChange={setOn} />} />
-  <Row title="Account" value="Signed in" onClick={openAccount} />
-</List>
-```
-
-The content-first parts are components too: `Hero`, `Card`, `Metric`,
-`Ring`, `Bars`, `Progress`, `Badge`, `Stats`, `Tiles` and `Tile`,
-`Carousel`, `SectionHeader` and `Art`. A card, hero or tile given
-`onClick` or `href` is one tap, a real button or link named by its
-title; `tint="orange"` (or any CSS colour) colours it and what's inside.
-
-```jsx
-<Hero eyebrow="Up next" title="Water the Calathea" glyph={<LeafIcon />}
-      action="Water Now" onAction={water}>Due this morning</Hero>
-<Card title="This Week" tint="green" onClick={openWeek}>
-  <div className="ios-card__split">
-    <Metric value="5" unit="of 7" label="watered on the day" />
-    <Ring value={0.71} label="5 of 7 on time" />
-  </div>
-</Card>
-```
-
-Pass `symbol="fork.knife"` wherever an icon goes: the drawing is your
-stand-in, the name is what an Apple-platform build needs. Light mode
-keeps Apple's own palette, so a contrast audit flags the same places the
-contrast section below describes, and only those.
+Read `references/react.md` for React components over the recipes.
 
 ### Tailwind
 
-The themes map utilities onto the kit's variables, so Tailwind classes
-follow Dark Mode and Increase Contrast exactly as the recipes do. Load
-the tokens as well as the theme:
-
-```css
-/* v4 */
-@import "tailwindcss";
-@import "./ios/tokens/ios-tokens.css";
-@import "./ios/ios-components.css";
-@import "./ios/tailwind/theme.css";
-```
-
-For v3, `presets: [require("./ios/tailwind/preset.cjs")]` in the config,
-and the two CSS files in your stylesheet. v3 can't put an opacity
-modifier on a variable colour (`bg-ios-accent/50`); v4 can.
-
-Utilities for the parts, recipes for the components: `bg-ios-bg-card`
-and `px-ios-gutter` lay out your own content, while a list is still
-`ios-list`, which carries row heights, separators and insets that a
-string of utilities would only approximate.
+Read `references/tailwind.md` for the Tailwind v4 theme and v3 preset.
 
 ## The values that are *not* what people think
 
@@ -456,86 +311,11 @@ Most "iOS-style" web UI fails on these rather than on colour:
 
 ## Liquid Glass
 
-A plain `backdrop-filter` is why most "iOS 26 style" web UI looks flat.
-Measured off `Materials/_Liquid Glass` at 4×, the surface is four layers,
-and the blur is the least of them:
-
-- **Rim.** Not uniform. Light comes from above, so in dark mode the top
-  edge is `#7E7E7E` against a `#1A1A1A` body — a bright specular line —
-  while the sides fall to `#151515`, *darker* than the body. In light
-  mode the whole rim is darker than the face (`#C5` top, `#97` sides on
-  `#F9F9F9`), so it reads as an outline instead.
-- **Falloff.** Just inside the rim, a band grading back to the body over
-  ~1.5 pt: `#949494 → #434343 → #1F1F1F → #1A1A1A`.
-- **Body.** Very slightly darker at the centre than at the edges.
-- **Ambient shadow.** Wide and soft — 8% black in light, 15% in dark at
-  the edge, still 3–5% sixteen points out.
-
-```html
-<button class="ios-glass ios-glass--light ios-glass-btn ios-glass--capsule">
-  Focus
-</button>
-```
-
-Tint variants, measured rather than invented. "Light" and "Dark" Liquid
-Glass are the same neutral grey at two strengths, not a white/black pair,
-and "Prominent" isn't a tint at all — it's the accent filled solid:
-
-| Class | Value | Use |
-|---|---|---|
-| `.ios-glass--light` | `rgba(115,115,128,.078)` | over busy or bright content, so colour survives |
-| `.ios-glass--dark` | `rgba(116,116,128,.18)` | over quiet content, where the control must separate |
-| `.ios-glass--prominent` | `var(--ios-accent)`, opaque | the primary action |
-| `.ios-glass--clear` | minimal tint | over vivid artwork |
-
-`.ios-navbar` and `.ios-tabbar` are glass already.
-
-**It only works over something.** Glass is a refraction; on a flat
-background there is nothing to refract and nothing to blur, and it
-collapses to a grey box. If a design has no photography, gradient, or
-scrolling content behind the bars, glass is the wrong material — reach
-for a plain surface rather than faking it.
-
-`prefers-reduced-transparency` drops every glass surface to an opaque
-one, which is the setting Apple's own Reduce Transparency maps to.
+Read `references/liquid-glass.md` for the four layers that make Liquid Glass, and why a plain `backdrop-filter` looks flat.
 
 ## Typography is where it stops looking like SF
 
-Getting the family right is the easy half. Two things decide whether the
-type actually reads as Apple, and both are counterintuitive.
-
-**Tracking is not monotonic.** Apple publishes a per-size table
-(Apple's typography page, *Tracking values → SF Pro*; the figures are in `tokens/sf-pro-tracking.json`) and the sign flips:
-
-| Style | Size | Tracking |
-|---|---|---|
-| Large Title | 34 pt | **+0.012em** |
-| Title 1 | 28 pt | **+0.014em** |
-| Title 2 | 22 pt | −0.012em |
-| Body / Headline | 17 pt | −0.026em |
-| Footnote | 13 pt | −0.006em |
-| Caption 2 | 11 pt | +0.006em |
-
-Large type is tracked **looser**, not tighter. The intuition that big
-text tightens is wrong here, and it is wrong on the most prominent text
-on the screen. On Apple platforms the font's `trak` table applies these
-automatically; browsers ignore `trak`, so they must be set as
-`letter-spacing`. Use `var(--ios-track-<style>)` beside every
-`var(--ios-text-<style>)`.
-
-**SF's weight axis is not the CSS ladder.** Read off the variable font's
-named instances:
-
-| | Ultralight | Thin | Light | Regular | Medium | Semibold | Bold | Heavy | Black |
-|---|---|---|---|---|---|---|---|---|---|
-| `wght` | 31 | 111 | 274 | 400 | **510** | **590** | 700 | 860 | 1000 |
-
-Medium is 510 and Semibold is 590. `font-weight: 600` asks for something
-between two real weights that Apple never ships — close enough to look
-fine and wrong enough to feel off. Use `var(--ios-weight-semibold)`.
-
-Both sets are generated, not typed: the tracking is parsed out of
-Apple's typography page and the weights come from the font's own `fvar` table.
+Read `references/typography.md` for tracking per size and the other details that decide whether type reads as SF.
 
 ## Contrast: Apple's light palette does not clear Apple's own table
 
@@ -602,46 +382,7 @@ language beats one that claims to be indistinguishable and isn't.
 
 ## Anything the recipes don't cover
 
-`ui-kit-tokens.json` holds every measurement, one record per rendering,
-with `component`, `appearance`, `state`, `size_pt`, `radius_pt` and the
-colours with their alpha and coverage share. Query it directly:
-
-```bash
-python3 - <<'EOF'
-import json
-rows = json.load(open("ui-kit-tokens.json"))
-for r in rows:
-    if r["component"] == "Sliders" and r["appearance"] == "light":
-        print(r["file"], r["size_pt"], r["radius_pt"],
-              [c["css"] for c in r["colours"][:3]])
-EOF
-```
-
-Components measured include Alerts, Action Sheets, Tab Bars, Keyboards,
-Notifications, Date & Time Pickers, Steppers, Sliders, Text Fields,
-Materials, Page Controls, Pop-up Buttons, Context Menus and App Icons.
-
-Re-measure after changing the kit, then re-verify:
-
-```bash
-python3 scripts/extract_ui_kit_tokens.py   # PNGs  -> ui-kit-tokens.json
-python3 scripts/build_design_tokens.py     # JSON  -> CSS, Swift, Kotlin,
-                                           #    XML, Dart, TS, tokens.json
-python3 scripts/verify_web_ui.py           # asserts the rendered result
-```
-
-`verify_web_ui.py` drives a real browser over `example.html` and checks
-computed values, not appearance: every token resolves, the type scale
-lands on Apple's published numbers to the pixel, the switch measures 64x28
-with a 38×24 pill knob travelling 22px, hit targets clear 44px, separators skip each
-list's first row, the grouped backgrounds are the right way round, and
-every colour pair meets the contrast it should, a bundled face
-actually renders rather than falling through to a substitute, and the
-iOS 27 kit's own shapes hold: the 62pt tab bar with 54pt tabs and 10pt
-labels, the 62pt status bar with its 17pt clock, monochrome glass
-controls, a navigation bar with no material until content scrolls under
-it, and plain and glass text in their two labels. 218 checks across
-light, dark, and increased contrast.
+Read `references/beyond-the-recipes.md` for querying `ui-kit-tokens.json` when no recipe covers a component or state.
 
 ## Rules, not just looks
 

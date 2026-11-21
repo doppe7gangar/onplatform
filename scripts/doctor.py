@@ -28,6 +28,7 @@ That is what verify_web_ui.py and the eval runs are for.
 
 import argparse
 import json
+import glob
 import os
 import re
 import subprocess
@@ -65,6 +66,11 @@ def skill_docs():
         p = os.path.join(SKILLS, sk, "SKILL.md")
         if os.path.exists(p):
             out.append((sk, p))
+    # The Apple kit's references are its SKILL.md split up, with paths still
+    # relative to the skill folder, so they're checked the same way.
+    kit = "ui-kit-for-apple-platforms"
+    for ref in sorted(glob.glob(os.path.join(SKILLS, kit, "references", "*.md"))):
+        out.append((kit, ref))
     for name in ("TESTING.md", "README.md", "AGENTS.md"):
         p = os.path.join(REPO, name)
         if os.path.exists(p):

@@ -1,5 +1,5 @@
 ---
-description: Make App Store and Google Play screenshots from a design, at the stores' sizes, captioned on the brand colour or bare, and checked for size and alpha.
+description: Make App Store and Google Play screenshots at the stores' sizes
 argument-hint: "[design folder] [--plain] [--sizes iphone,iphone-large,ipad,mac,android]"
 disable-model-invocation: true
 ---

@@ -11,6 +11,7 @@
 #     --rollback        put back the skills as they were before the last install
 #     --version TAG     install another release (default: the one this script is for)
 #     --checks          also install Playwright, for the design checks
+#     --force           install even though the onplatform plugin is installed
 #
 # What it does: fetches the release into ~/.onplatform, checks it is the exact
 # commit this script was published with, saves your current copies of the
@@ -32,14 +33,15 @@ BACKUPS="$DEST/.onplatform-backups"
 STAMP_FILE="$DEST/.onplatform-installed"
 SKILLS="ui-kit-for-android design-workflow hig-guide motion-for-apple-platforms ui-kit-for-apple-platforms"
 
-DRY=0; ROLLBACK=0; CHECKS=0
+DRY=0; ROLLBACK=0; CHECKS=0; FORCE=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --dry-run) DRY=1 ;;
     --rollback) ROLLBACK=1 ;;
     --checks) CHECKS=1 ;;
+    --force) FORCE=1 ;;
     --version) shift; VERSION="${1:?--version needs a tag, e.g. v1.0.0}"; COMMIT="" ;;
-    -h|--help) sed -n '2,21p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "unknown option: $1 (try --help)"; exit 2 ;;
   esac
   shift
@@ -75,6 +77,22 @@ if [ "$ROLLBACK" = 1 ]; then
     mv "$last" "$last.restored"
   fi
   exit 0
+fi
+
+# The plugin brings the same five skills. With both, every skill loads twice.
+plugin_installed() {
+  local f
+  for f in "$HOME/.claude/plugins/installed_plugins.json" "$HOME/.claude/settings.json"; do
+    [ -f "$f" ] && grep -q '"onplatform@' "$f" && return 0
+  done
+  return 1
+}
+if [ "$FORCE" = 0 ] && plugin_installed; then
+  say "STOP: the onplatform plugin is already installed in Claude Code, and it brings"
+  say "these five skills. Installing them here as well would load every skill twice."
+  say "Nothing was installed. Keep the plugin (/plugin updates it), or remove it"
+  say "with /plugin first. bash install.sh --force installs anyway."
+  exit 1
 fi
 
 command -v git >/dev/null || { say "git is needed. On a Mac: xcode-select --install"; exit 1; }

@@ -42,6 +42,11 @@ Preview images
   docs/iphone.png, docs/ipad.png, docs/mac.png, docs/android.png
   Screenshots of the example pages, rendered with Inter.
 
+Plugin icon
+  .claude-plugin/icon.png
+  Drawn for this project: two phone outlines, no artwork of Apple's or
+  Google's.
+
 Each skill folder carries a copy of the licence (LICENSE), so it travels
 with the skill when the skill is installed on its own. Designs made with
 new_project.py carry the licence of every file copied into them, listed

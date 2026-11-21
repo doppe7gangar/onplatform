@@ -1,5 +1,5 @@
 ---
-description: Run every mechanical check on a design folder (taps, states, contrast, use of the kit, SF Symbol names, licences, the largest text, right to left, long text) and fix what fails until it passes.
+description: Run every check on a design folder and fix what fails
 argument-hint: "[design folder]"
 disable-model-invocation: true
 ---
