@@ -54,9 +54,10 @@ unless the person asks for them.
    `onplatform:design-critic` agent with the Agent tool ("Critique
    ./design"), fix its top three, and run `look.py` once more. When you
    can't start an agent, skip this step and say so.
-8. **Hand over.** Write the three-line taste verdict (what works, the
-   worst thing left, what you'd do next) to
-   `design/.visual-review/taste.md`, one line each. Then tell the person,
+8. **Hand over.** Save the three-line taste verdict (what works, the
+   worst thing left, what you'd do next) as a file with Write, to
+   `design/.visual-review/taste.md`, one line each: `onplatform present`
+   shows it from there, and saying it only in chat loses it. Then tell the person,
    in a few lines: what each screen does, that verdict, what you assumed,
    and how to see it: `onplatform present design` in their terminal shows
    every screen with its checks and the verdict, full screen; or

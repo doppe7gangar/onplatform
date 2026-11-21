@@ -208,15 +208,24 @@ class Design:
             if (kind, ident) not in seen:
                 seen.add((kind, ident))
                 self.places.append((kind, ident))
-        self.places.sort(key=lambda p: p[0] == "sheet")
+        # tabs in tab-bar order first, then pushed screens, then sheets
+        tabs = re.findall(r'class="[^"]*(?:ios-tabbar__item|m3-navbar__item|sidebar)[^"]*"[^>]*data-go="([^"]+)"', html)
+        order = {t: i for i, t in enumerate(dict.fromkeys(tabs))}
+        self.places.sort(key=lambda p: (p[0] == "sheet", order.get(p[1], len(order))))
         text = ""
         try:
             text = open(os.path.join(self.folder, "DESIGN.md"), encoding="utf-8").read()
         except OSError:
             pass
         kind, spatial = statusline.section(text, "Platform mode"), statusline.section(text, "Spatial model")
-        self.platform = statusline.PLATFORMS.get(kind, kind or "?")
-        self.layout = statusline.MODELS.get(spatial, spatial or "?")
+        if not kind:  # a short DESIGN.md: read the kit off the page
+            kind = next((k for k, pat in (("android", "m3-"), ("macos", "mac-window"), ("ipados", 'class="ipad'),
+                                          ("ios", "ios-")) if pat in html), "web")
+        if not spatial:
+            spatial = next((m for m, pat in (("tabs", "ios-tabbar"), ("tabs", "m3-navbar"),
+                                             ("sidebar", "sidebar")) if pat in html), "stack")
+        self.platform = statusline.PLATFORMS.get(kind, kind)
+        self.layout = statusline.MODELS.get(spatial, spatial)
         m = re.search(r"--[\w-]*accent:\s*(#[0-9A-Fa-f]{6})|--md-sys-color-primary:\s*(#[0-9A-Fa-f]{6})",
                       open(os.path.join(self.folder, "theme.css"), encoding="utf-8", errors="replace").read()
                       if os.path.exists(os.path.join(self.folder, "theme.css")) else "")
@@ -312,7 +321,8 @@ class Present:
         self.d = design
         self.sel = 0
         self.mode = "light"
-        self.note = "j/k to move · d dark · c checks · l look · o open · q quit"
+        self.note = (f"{len(design.places)} screens and sheets, light and dark. "
+                     "The picture is the one look.py rendered; press l to render again.")
         self.proto = image_protocol()
         self.busy = False
 
@@ -353,8 +363,12 @@ class Present:
         fails = [c for c in d.checks if c[0] == "FAIL"]
         warns = [c for c in d.checks if c[0] == "warn"]
         import textwrap
-        wrap = lambda mark, msg, n: [(mark if i == 0 else "  ") + " " + t for i, t in
-                                     enumerate(textwrap.wrap(msg, left - 6)[:n])]
+        def wrap(mark, msg, n):
+            lines = textwrap.wrap(msg, left - 8)
+            if len(lines) > n:
+                lines = lines[:n]
+                lines[-1] = lines[-1][:left - 9].rstrip(" ,;:") + "…"
+            return [(mark if i == 0 else "  ") + " " + t for i, t in enumerate(lines)]
         for k, msg in fails[:3]:
             ch += wrap(f"{fg((248, 81, 73))}✗{RESET}", msg, 3)
         for k, msg in warns[:2]:
@@ -367,7 +381,7 @@ class Present:
         chh = max(5, min(len(ch) + 2, 16))
         out.append(self.panel(1, cy, left, chh, 3, "Checks", ch))
         ty = cy + chh
-        taste = [l for t in d.taste for l in wrap(f"{g}›{RESET}", t, 4)] or [f"{dim}the designer's verdict goes in{RESET}",
+        taste = [l for t in d.taste for l in wrap(f"{g}›{RESET}", t, 8)] or [f"{dim}the designer's verdict goes in{RESET}",
                                                          f"{dim}.visual-review/taste.md{RESET}"]
         out.append(self.panel(1, ty, left, max(4, H - ty - 1), 4, "Verdict", taste))
 
