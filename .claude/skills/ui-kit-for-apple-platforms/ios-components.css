@@ -1675,10 +1675,11 @@ body {
 
 /* --------------------------------------------------------------- Art
 
-   Artwork drawn from the tint, for when there is no photograph: light
-   from one corner, depth from the other, and a large symbol bleeding
-   off the edge, the way Shortcuts and Fitness draw their tiles. It
-   colours a hero, a tile or a thumbnail and needs no image licence.
+   Artwork drawn from the tint, for when there is no photograph: the
+   tint itself, a little light from one corner, and a quiet symbol in
+   the other. It is for one hero, or one detail header -- not for every
+   tile in a grid, where it reads as placeholder (references/taste.md).
+   It needs no image licence.
 
      <div class="ios-art"><svg class="ios-art__glyph" ...></svg></div>
 
@@ -1689,9 +1690,8 @@ body {
 .ios-art {
   position: relative; overflow: hidden;
   background:
-    radial-gradient(120% 90% at 90% 0%, color-mix(in oklab, var(--tint, var(--ios-accent)) 55%, #fff) 0%, transparent 60%),
-    radial-gradient(90% 80% at 0% 100%, color-mix(in oklab, var(--tint, var(--ios-accent)) 62%, #000) 0%, transparent 70%),
-    linear-gradient(160deg, color-mix(in oklab, var(--tint, var(--ios-accent)) 85%, #fff), var(--tint, var(--ios-accent)) 50%, color-mix(in oklab, var(--tint, var(--ios-accent)) 78%, #000));
+    radial-gradient(110% 80% at 100% 0%, color-mix(in oklab, var(--tint, var(--ios-accent)) 80%, #fff) 0%, transparent 65%),
+    linear-gradient(170deg, var(--tint, var(--ios-accent)), color-mix(in oklab, var(--tint, var(--ios-accent)) 88%, #000));
   color: #fff;
 }
 /* White words have to hold on any tint, and a yellow or mint brand is
@@ -1701,17 +1701,15 @@ body {
 @supports (color: oklch(from red l c h)) {
   .ios-art {
     background:
-      radial-gradient(120% 90% at 90% 0%, oklch(from var(--tint, var(--ios-accent)) min(calc(l + 0.1), 0.72) c h) 0%, transparent 60%),
-      radial-gradient(90% 80% at 0% 100%, oklch(from var(--tint, var(--ios-accent)) min(calc(l * 0.62), 0.36) c h) 0%, transparent 70%),
-      linear-gradient(160deg, oklch(from var(--tint, var(--ios-accent)) min(calc(l + 0.04), 0.66) c h),
-                      oklch(from var(--tint, var(--ios-accent)) min(l, 0.56) c h) 50%,
-                      oklch(from var(--tint, var(--ios-accent)) min(calc(l * 0.78), 0.42) c h));
+      radial-gradient(110% 80% at 100% 0%, oklch(from var(--tint, var(--ios-accent)) min(calc(l + 0.06), 0.62) c h) 0%, transparent 65%),
+      linear-gradient(170deg, oklch(from var(--tint, var(--ios-accent)) min(l, 0.54) c h),
+                      oklch(from var(--tint, var(--ios-accent)) min(calc(l * 0.86), 0.44) c h));
   }
 }
 .ios-art__glyph {
-  position: absolute; right: -8%; bottom: -14%;
-  width: 66%; height: auto; aspect-ratio: 1;
-  color: #fff; opacity: .26;
+  position: absolute; right: -2%; bottom: -4%;
+  width: 40%; height: auto; aspect-ratio: 1;
+  color: #fff; opacity: .16;
   pointer-events: none;
 }
 .ios-art__img {
@@ -1723,7 +1721,7 @@ body {
    lands; stopping at 45% left the eyebrow under 4.5:1 on a light tint. */
 .ios-art--scrim::after {
   content: ""; position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(to top, rgba(0, 0, 0, .58), rgba(0, 0, 0, .34) 50%, rgba(0, 0, 0, .1) 78%, transparent);
+  background: linear-gradient(to top, rgba(0, 0, 0, .26), rgba(0, 0, 0, .12) 50%, transparent 78%);
 }
 
 /* -------------------------------------------------------------- Hero

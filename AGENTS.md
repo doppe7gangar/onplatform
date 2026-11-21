@@ -1,6 +1,8 @@
-# Apple HIG reference — agent instructions
+# onplatform — agent instructions
 
-This repository helps agents work with Apple's Human Interface Guidelines:
+This repository helps agents make app designs that read as native on
+Apple's platforms and on Android. For Apple, it works with Apple's Human
+Interface Guidelines:
 it says which official page holds the answer, keeps the figures reached
 for most, maps guidance to the APIs that implement it,
 and checks SwiftUI code. Apple's own wording stays on Apple's site and is

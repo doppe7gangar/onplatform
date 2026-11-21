@@ -8,7 +8,8 @@
   frontmatter it needs, and every ${CLAUDE_PLUGIN_ROOT} path any of them, or
   hooks.json, names exists.
 - The SwiftUI hook reports a seeded file's violations, says nothing about a
-  clean one, a non-Swift file or a repeat, and never fails.
+  clean one, a non-Swift file or a repeat, and never fails; it does the same
+  for a Compose file against Material 3. Each hook's `if` is one rule.
 - The commit guard denies a commit or push that would take SF Pro along,
   allows it once git ignores the font, ignores commands that aren't commits
   or pushes, finds the repository through `git -C` and `cd`, and turns off
@@ -118,7 +119,11 @@ def main():
                + ("can write the design" if writes else "read-only"), ok, fields)
         named += plugin_paths(body)
     hooks_text = open(os.path.join(ROOT, "hooks", "hooks.json")).read()
-    json.loads(hooks_text)
+    conds = [h.get("if", "") for es in json.loads(hooks_text)["hooks"].values()
+             for e in es for h in e["hooks"]]
+    # Claude Code reads an `if` as one permission rule: "A|B" never matches,
+    # so the hook silently never runs. One rule per hook.
+    expect("each hook's `if` is a single rule", not any("|" in c for c in conds), conds)
     named += plugin_paths(hooks_text)
     missing = sorted({p for p in named if not os.path.exists(ROOT + p)})
     expect(f"all {len(set(named))} ${{CLAUDE_PLUGIN_ROOT}} paths exist", not missing, missing)
@@ -173,7 +178,98 @@ def main():
     expect("bad input never fails the edit", rc == 0 and out == "", out)
     rc, out = hook("swiftui_check.py", dict(event, session_id="t2"), {"ONPLATFORM_SWIFTUI_HOOK": "off"})
     expect("ONPLATFORM_SWIFTUI_HOOK=off turns it off", rc == 0 and out == "", out)
+    kt = os.path.join(data, "Home.kt")
+    open(kt, "w").write("import androidx.compose.material3.Text\n\n@Composable\nfun Home() {\n"
+                        "    Text(\"Hi\", fontSize = 9.sp)\n}\n")
+    kt_event = {"session_id": "t3", "cwd": ROOT, "tool_name": "Write", "tool_input": {"file_path": kt}}
+    rc, out = hook("swiftui_check.py", kt_event, {"CLAUDE_PLUGIN_DATA": data})
+    ctx = json.loads(out)["hookSpecificOutput"]["additionalContext"] if out else ""
+    expect("a Compose file's violations come back, against Material 3",
+           rc == 0 and ctx.startswith("Material 3 check on Home.kt") and "- violation" in ctx, out)
+    rc, out = hook("swiftui_check.py", dict(kt_event, session_id="t4"), {"ONPLATFORM_COMPOSE_HOOK": "off"})
+    expect("ONPLATFORM_COMPOSE_HOOK=off turns it off", rc == 0 and out == "", out)
     shutil.rmtree(data, ignore_errors=True)
+
+    print("setup:")
+    home = tempfile.mkdtemp(prefix="onp-home-")
+    allow = os.path.join(ROOT, "skills", "setup", "allow.py")
+    env = dict(os.environ, HOME=home, CLAUDE_PLUGIN_ROOT=ROOT)
+    p = subprocess.run([sys.executable, allow, "--check"], capture_output=True, text=True, env=env)
+    expect("--check says not yet set up on a fresh home", p.returncode == 1, p.stdout)
+    p = subprocess.run([sys.executable, allow, "--apply"], capture_output=True, text=True, env=env)
+    rules = json.load(open(os.path.join(home, ".claude", "settings.json")))["permissions"]["allow"]
+    expect("/onplatform:setup adds just a Read rule and a python3 rule for the plugin",
+           p.returncode == 0 and len(rules) == 2 and rules[0].startswith("Read(/")
+           and rules[1].startswith("Bash(python3 "), rules)
+    p2 = subprocess.run([sys.executable, allow, "--apply"], capture_output=True, text=True, env=env)
+    again = json.load(open(os.path.join(home, ".claude", "settings.json")))["permissions"]["allow"]
+    expect("running it twice adds nothing", "Already set up" in p2.stdout and again == rules, p2.stdout)
+    p = subprocess.run([sys.executable, allow, "--check"], capture_output=True, text=True, env=env)
+    expect("--check says set up afterwards", p.returncode == 0, p.stdout)
+    sp = os.path.join(home, ".claude", "settings.json")
+    p = subprocess.run([sys.executable, allow, "--apply", "--statusline"], capture_output=True, text=True, env=env)
+    cfg = json.load(open(sp))
+    cmd = (cfg.get("statusLine") or {}).get("command", "")
+    expect("--statusline sets onplatform's status line and keeps the rules",
+           p.returncode == 0 and "statusline.py" in cmd and cfg["permissions"]["allow"] == rules, p.stdout)
+    cfg["statusLine"] = {"type": "command", "command": "my-own-line"}
+    json.dump(cfg, open(sp, "w"))
+    p = subprocess.run([sys.executable, allow, "--apply", "--statusline"], capture_output=True, text=True, env=env)
+    expect("someone else's status line is never replaced",
+           json.load(open(sp))["statusLine"]["command"] == "my-own-line" and "Kept your status line" in p.stdout,
+           p.stdout)
+
+    p = subprocess.run([sys.executable, allow, "--apply", "--command"], capture_output=True, text=True, env=env)
+    wrapper = os.path.join(home, ".local", "bin", "onplatform")
+    expect("--command writes the onplatform command", os.access(wrapper, os.X_OK), p.stdout)
+    p = subprocess.run([wrapper, "banner"], capture_output=True, text=True, env=dict(env, NO_COLOR="1"))
+    expect("which prints the logo and the welcome box",
+           p.returncode == 0 and "Welcome to onplatform!" in p.stdout and "╰" in p.stdout, p.stdout + p.stderr)
+    open(wrapper, "w").write("#!/bin/sh\necho mine\n")
+    p = subprocess.run([sys.executable, allow, "--apply", "--command"], capture_output=True, text=True, env=env)
+    expect("someone else's onplatform command is never replaced",
+           open(wrapper).read() == "#!/bin/sh\necho mine\n" and "Kept" in p.stdout, p.stdout)
+
+    print("status line, welcome card and output style:")
+    line = os.path.join(ROOT, "skills", "setup", "statusline.py")
+    proj = tempfile.mkdtemp(prefix="onp-line-")
+    subprocess.run([sys.executable, SCAFFOLD, "--name", "Pantry", "--brand", "#C1552E", "--kind", "ios",
+                    "--model", "tabs", "-o", os.path.join(proj, "design")], check=True, capture_output=True)
+    session = json.dumps({"workspace": {"current_dir": proj}, "model": {"display_name": "Opus"}})
+    p = subprocess.run([sys.executable, line], input=session, capture_output=True, text=True,
+                       env=dict(os.environ, NO_COLOR="1"))
+    out = p.stdout.splitlines()
+    expect("inside a design it names the platform, layout and product, then model and context",
+           out[0] == f"◇ onplatform  {proj}  ·  iPhone · tab bar · Pantry  /onplatform:check"
+           and out[1] == "Opus", p.stdout)
+    styled = json.dumps({"workspace": {"current_dir": proj}, "output_style": {"name": "onplatform:onplatform"},
+                         "context_window": {"used_percentage": 12}})
+    p = subprocess.run([sys.executable, line], input=styled, capture_output=True, text=True,
+                       env=dict(os.environ, NO_COLOR="1", COLUMNS="60"))
+    out = p.stdout.splitlines()
+    expect("the diamond fills while the output style is on, and context sits at the right edge",
+           out[0].startswith("◆ onplatform") and out[1].endswith("context: 12%") and len(out[1]) == 58, p.stdout)
+    p = subprocess.run([sys.executable, line], input=json.dumps({"workspace": {"current_dir": home}}),
+                       capture_output=True, text=True, env=dict(os.environ, NO_COLOR="1"))
+    expect("anywhere else it points to /onplatform:start",
+           p.stdout.strip() == f"◇ onplatform  {home}  /onplatform:start", p.stdout)
+    p = subprocess.run([sys.executable, os.path.join(ROOT, "skills", "start", "card.py"), proj],
+                       capture_output=True, text=True, env=dict(os.environ, HOME=home))
+    rows = p.stdout.splitlines()
+    expect("/onplatform:start's card is a closed box naming the design",
+           p.returncode == 0 and rows[0].startswith("╭") and rows[-1].startswith("╰")
+           and len({len(r) for r in rows}) == 1 and "iPhone · tab bar · Pantry" in p.stdout, p.stdout)
+    p = subprocess.run([sys.executable, line], input="not json", capture_output=True, text=True)
+    expect("bad input still prints a line", p.returncode == 0 and "onplatform" in p.stdout, p.stderr)
+    p = subprocess.run([sys.executable, os.path.join(ROOT, "bin", "onplatform"), "present",
+                        os.path.join(proj, "design")], capture_output=True, text=True, stdin=subprocess.DEVNULL)
+    expect("onplatform present names the design when there's no terminal to draw in",
+           p.returncode == 0 and "iPhone · tab bar" in p.stdout, p.stdout + p.stderr)
+    shutil.rmtree(proj, ignore_errors=True)
+    shutil.rmtree(home, ignore_errors=True)
+    style = open(os.path.join(ROOT, "output-styles", "onplatform.md"), encoding="utf-8").read()
+    expect("the output style has a name, a description and keeps coding instructions",
+           style.startswith("---\nname: onplatform\ndescription: ") and "keep-coding-instructions: true" in style)
 
     print("commit guard:")
     base = tempfile.mkdtemp(prefix="hig-guard-")

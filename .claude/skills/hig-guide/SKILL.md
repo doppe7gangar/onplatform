@@ -1,6 +1,6 @@
 ---
 name: hig-guide
-description: Apple's Human Interface Guidelines, put to work: review UI code or designs against what Apple actually says, choose the right control or presentation (sheet, popover, alert or full screen; tab bar, sidebar or split view), look up exact figures (tap targets, type sizes, contrast, icon sizes), find the SwiftUI, UIKit or AppKit API behind a piece of guidance, and adapt a design across iOS, iPadOS, macOS, tvOS, visionOS and watchOS. It routes each question to the official page and reads Apple's wording there, never from memory, and checks SwiftUI code and SF Symbol names. Use for building, reviewing or fixing any Apple-platform UI, including SwiftUI, UIKit and AppKit code review, and whenever an answer turns on what Apple specifies rather than general instinct, even when the HIG isn't mentioned: "is this button too small", "sheet or popover?", "why does my Mac app feel wrong", "make this work on iPad", "is this accessible", app icons, Dark Mode, Dynamic Type, VoiceOver, SF Symbols, Liquid Glass.
+description: Apple's Human Interface Guidelines, read from Apple's own pages: review SwiftUI, UIKit, AppKit or a design against them, pick the right control or presentation (sheet or popover, tab bar or sidebar), look up exact figures (tap targets, type sizes, contrast) and the API behind them, across iOS, iPadOS, macOS, tvOS, visionOS and watchOS. Use whenever an answer turns on what Apple specifies, even unnamed: "is this button too small", "why does my Mac app feel wrong", "make this work on iPad", "is this accessible", Dark Mode, Dynamic Type, SF Symbols, Liquid Glass.
 ---
 
 # Apple Human Interface Guidelines
@@ -9,6 +9,12 @@ The guidelines live on Apple's site, and that is where their wording is
 read from. This skill is the part around them: knowing which page holds
 the answer, the figures as data, the API behind the guidance, and checks
 for code. Six references:
+
+Everything named here is in this skill's folder, `${CLAUDE_SKILL_DIR}`.
+Search the references with the Grep tool and open them with Read. Run a script
+as one plain command, `python3 ${CLAUDE_SKILL_DIR}/hig_page.py sheets`, with no `cd`,
+pipe or `2>&1` around it: one approval then covers it for good, where a
+compound command asks again every time.
 
 | File | Use it for |
 |---|---|
@@ -21,21 +27,46 @@ for code. Six references:
 
 ## How to answer
 
-1. **Find the page.** `grep -i "sheet" references/topics.md`. When the topic
+1. **Find the page.** Grep `references/topics.md` for "sheet". When the topic
    isn't a component, `concepts.md` says where it's filed.
-2. **Read it on Apple's site.** `python3 hig_page.py sheets` prints the
+2. **Read it on Apple's site.** `python3 ${CLAUDE_SKILL_DIR}/hig_page.py sheets` prints the
    page, fetched from developer.apple.com (`--section "Platform
    considerations"` or `--grep sidebar` for part of it); fetching the
    official address yourself works too. That is the only source for what Apple says: model
    memory of the HIG goes stale every OS release, and a remembered rule
    sounds exactly as confident as a real one.
-3. **Answer with the link.** Prefer your own words plus the link. When the
+3. **Answer with the link,** in the shape below. Prefer your own words plus the link. When the
    exact wording matters, quote a short passage copied from the page you
    just read, character for character.
 4. **If the page can't be fetched**, say so. Answer from `numbers.md`,
    `concepts.md` and `patterns.md`, label anything else as your
    understanding rather than Apple's statement, and give the link to
    check.
+
+## The answer's shape
+
+A question gets an answer someone can act on at a glance, not an essay.
+Use this shape, and nothing around it:
+
+```
+**Too small.** 30 × 30 pt is under the 44 × 44 pt hit region Apple sets for iPhone.
+
+> "(the one sentence that settles it, copied from the page)" — [Buttons](https://developer.apple.com/design/human-interface-guidelines/buttons)
+
+**Fix:** keep the 30 pt glyph and grow what's tappable.
+    (the code: six lines at most)
+
+iPadOS: same · visionOS: 60 × 60 pt · [Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility)
+```
+
+- **The verdict first**, in bold, two to four words ("Too small.", "Use a sheet.", "Fine as is."), then one sentence with the number and its platform.
+- **One quote at most**, fifteen words or fewer (cut the rest with …), copied from the page you just read, with its link.
+- **The fix**, if there is one: one line, then code only if it's shorter than the explanation would be.
+- **One footer line** for other platforms and further pages, separated by ` · `.
+- Nothing between the fix and the footer: a caveat goes in the verdict, a further page goes in the footer.
+- About ten lines in all. No headings, no "two things worth checking", no closing offer. If it truly depends on something you can't see, say which way it goes in the verdict ("Too small, if that's the tap area.") rather than adding a section.
+
+Reviews keep their own shape (violations, guidance, judgment); this is for questions.
 
 ## Writing new UI
 

@@ -76,7 +76,8 @@ COMPONENTS = [
 ]
 
 # The repo's own binary files: NOTICE lists them as original work.
-ORIGINAL = [re.compile(r"^docs/(iphone|ipad|mac|android)\.png$")]
+ORIGINAL = [re.compile(r"^docs/(iphone|ipad|mac|android)\.png$"),
+            re.compile(r"^\.claude-plugin/icon\.png$")]
 BINARY = re.compile(r"\.(png|jpe?g|gif|webp|heic|tiff?|bmp|ico|pdf|psd|sketch|fig|svg|"
                     r"ttf|otf|woff2?|eot|mp4|mov)$", re.I)
 LICENCE_NAME = re.compile(r"(^|/)(LICEN[CS]E|COPYING|NOTICE)([-._][^/]*)?$", re.I)

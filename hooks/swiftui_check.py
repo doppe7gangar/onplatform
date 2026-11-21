@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
-"""After a .swift file is written or edited: what the HIG would flag in it.
+"""After a .swift or .kt file is written or edited: what the platform's
+guidelines would flag in it.
 
-Runs hig-guide's check_swiftui.py on the one file and hands the findings
-back to Claude as context: violations and API problems listed, guidance
-counted. Says nothing when the file is clean, isn't Swift, or reports the
-same findings it reported last time. Never blocks: the edit has happened,
-and the findings are for fixing next.
+Runs hig-guide's check_swiftui.py on a Swift file, or ui-kit-for-android's
+check_compose.py on a Kotlin file, and hands the findings back to Claude as
+context: violations and API problems listed, guidance counted. Says nothing
+when the file is clean, is neither, or reports the same findings it reported
+last time. Never blocks: the edit has happened, and the findings are for
+fixing next.
 
-Off with ONPLATFORM_SWIFTUI_HOOK=off in the environment (settings.json "env").
+Off with ONPLATFORM_SWIFTUI_HOOK=off or ONPLATFORM_COMPOSE_HOOK=off in the
+environment (settings.json "env").
 """
 
 import hashlib
@@ -17,7 +20,13 @@ import subprocess
 import sys
 
 ROOT = os.environ.get("CLAUDE_PLUGIN_ROOT") or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CHECKER = os.path.join(ROOT, ".claude", "skills", "hig-guide", "check_swiftui.py")
+SKILLS = os.path.join(ROOT, ".claude", "skills")
+# extension: (checker, switch, what its findings are measured against)
+CHECKERS = {
+    ".swift": (os.path.join(SKILLS, "hig-guide", "check_swiftui.py"), "ONPLATFORM_SWIFTUI_HOOK", "HIG"),
+    ".kt": (os.path.join(SKILLS, "ui-kit-for-android", "check_compose.py"), "ONPLATFORM_COMPOSE_HOOK",
+            "Material 3"),
+}
 SHOWN = 10
 
 
@@ -45,21 +54,23 @@ def seen_before(session, path, digest):
 
 
 def main():
-    if os.environ.get("ONPLATFORM_SWIFTUI_HOOK", "").lower() in ("off", "0", "false", "no"):
-        return 0
     try:
         event = json.load(sys.stdin)
     except ValueError:
         return 0
     path = (event.get("tool_input") or {}).get("file_path") or ""
-    if not path.endswith(".swift"):
+    ext = os.path.splitext(path)[1]
+    if ext not in CHECKERS:
+        return 0
+    checker, switch, against = CHECKERS[ext]
+    if os.environ.get(switch, "").lower() in ("off", "0", "false", "no"):
         return 0
     if not os.path.isabs(path):
         path = os.path.join(event.get("cwd") or os.getcwd(), path)
-    if not (os.path.isfile(path) and os.path.isfile(CHECKER)):
+    if not (os.path.isfile(path) and os.path.isfile(checker)):
         return 0
     try:
-        run = subprocess.run([sys.executable, CHECKER, "--json", path],
+        run = subprocess.run([sys.executable, checker, "--json", path],
                              capture_output=True, text=True, timeout=25)
         findings = json.loads(run.stdout or "[]")
     except (subprocess.TimeoutExpired, ValueError, OSError):
@@ -74,7 +85,7 @@ def main():
               + [f for f in findings if f.get("kind") == "api"])
     guidance = [f for f in findings if f.get("kind") == "guidance"]
     name = os.path.basename(path)
-    lines = [f"HIG check on {name}: {sum(f.get('kind') == 'violation' for f in findings)} "
+    lines = [f"{against} check on {name}: {sum(f.get('kind') == 'violation' for f in findings)} "
              f"violation(s), {sum(f.get('kind') == 'api' for f in findings)} API issue(s), "
              f"{len(guidance)} guidance note(s)."]
     for f in listed[:SHOWN]:
@@ -83,7 +94,7 @@ def main():
     if len(listed) > SHOWN:
         lines.append(f"- and {len(listed) - SHOWN} more")
     if guidance:
-        lines.append(f"Guidance is advice, not a rule; the whole report: python3 {CHECKER} {path}")
+        lines.append(f"Guidance is advice, not a rule; the whole report: python3 {checker} {path}")
     if listed:
         lines.append("Fix the violations before calling this done, or say why one doesn't apply here.")
     print(json.dumps({"hookSpecificOutput": {"hookEventName": "PostToolUse",
