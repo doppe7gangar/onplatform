@@ -1215,6 +1215,64 @@ def check_brand_presence(b, url, name, brand, width=390):
         ok(f"{name}: the brand colour is {share:.0f}% of the first screen")
 
 
+RESTRAINT_ART_JS = """() => [...document.querySelectorAll('.ios-art, .ios-headerhero, .ios-hero')]
+  .filter(e => !e.closest('template'))
+  .filter(e => !(e.classList.contains('ios-art') && e.closest('.ios-hero, .ios-headerhero')))
+  .map(e => (e.closest('[data-screen-id], [data-sheet-id]') || {getAttribute: () => 'page'})
+       .getAttribute('data-screen-id') || 'a sheet')"""
+
+
+def check_restraint(b, url, name, brand, width=390):
+    """What makes a passing design look bad: colour and art everywhere.
+
+    One screen may be loud. A design whose every screen is brand colour,
+    or whose list items each wear the hero's gradient and faded glyph,
+    reads as a template however correct its metrics. Measured screen by
+    screen, light, at the first width. See references/taste.md.
+    """
+    import stress_test
+    art = None
+    pg = b.new_page(viewport={"width": width, "height": 844 if width < 600 else 900}, color_scheme="light")
+    try:
+        pg.goto(url + "?state=populated", wait_until="load")
+        pg.wait_for_timeout(250)
+        art = pg.evaluate(RESTRAINT_ART_JS)
+        if len(art) > 2:
+            where = sorted(set(art))
+            bad(f"{name}: {len(art)} surfaces carry hero art (gradient and glyph) across "
+                f"{', '.join(where[:5])}. Art is for one hero on the first screen; repeated "
+                f"items are told apart by their content, a figure or a small symbol, not "
+                f"by wearing the hero. See references/taste.md.")
+        if not brand or not re.fullmatch(r"#[0-9A-Fa-f]{6}", brand):
+            return
+        hue, sat = hue_of(brand)
+        if sat < 0.25:
+            return
+        targets = pg.evaluate(stress_test.TARGETS_JS)
+        screens = targets["screens"]
+        if not screens:
+            return
+        import base64
+        loud = []
+        for i, ident in enumerate(screens):
+            pg.evaluate(stress_test.SHOW_JS, ["screen", ident])
+            pg.wait_for_timeout(120)
+            png = base64.b64encode(pg.screenshot()).decode()
+            share = pg.evaluate(HUE_JS, [png, hue, -999])["brand"] * 100
+            limit = 40 if i == 0 else 22
+            if share > limit:
+                loud.append(f"{ident} {share:.0f}%")
+        if loud:
+            bad(f"{name}: the brand colour is wallpaper, not an accent: {', '.join(loud)} of "
+                f"the screen (at most 40% on the first screen, 22% on the others). Keep it "
+                f"on the hero, the selected tab and the main action; put the rest on the "
+                f"system grouped surfaces. See references/taste.md.")
+        else:
+            ok(f"{name}: the brand colour stays an accent on all {len(screens)} screen(s)")
+    finally:
+        pg.close()
+
+
 def check_browser(path, brand):
     try:
         from playwright.sync_api import sync_playwright
@@ -1294,6 +1352,11 @@ def check_browser(path, brand):
                 check_brand_presence(b, url, name, brand, 1280 if mac else widths[0])
             except Exception as e:  # a measurement, never a crash
                 warn(f"{name}: couldn't measure the brand colour ({str(e)[:60]})")
+            if not mac:
+                try:
+                    check_restraint(b, url, name, brand, widths[0])
+                except Exception as e:  # a measurement, never a crash
+                    warn(f"{name}: couldn't measure restraint ({str(e)[:60]})")
         for scheme in ("light", "dark"):
             for width in widths:
                 pg = b.new_page(viewport={"width": width, "height": 900},
